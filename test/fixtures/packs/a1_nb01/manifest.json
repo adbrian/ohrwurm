@@ -1,0 +1,257 @@
+{
+  "schema_version": 2,
+  "pack_id": "a1_nb01",
+  "level": "a1",
+  "kind": "notebook",
+  "number": 1,
+  "source_lang": "de",
+  "target_lang": "en",
+  "audio_format": "opus",
+  "voices": {
+    "de": "de-DE-KatjaNeural",
+    "en": "en-GB-SoniaNeural"
+  },
+  "created_at": "2026-09-20T10:00:00Z",
+  "generated_at": "2026-09-23T14:30:00Z",
+  "cards": [
+    {
+      "id": "a1_nb01__der_freund",
+      "key": "der_freund",
+      "type": "noun",
+      "added_at": "2026-09-20T10:00:00Z",
+      "word": {
+        "text": "der Freund",
+        "audio": "a1_nb01__der_freund__word.ogg"
+      },
+      "translation": {
+        "text": "friend",
+        "audio": "a1_nb01__der_freund__translation.ogg"
+      },
+      "grammar": {
+        "article": "der",
+        "plural": "die Freunde"
+      },
+      "examples": [
+        {
+          "n": 1,
+          "form": "base",
+          "kind": "statement",
+          "origin": "generated",
+          "source": {
+            "text": "Ich treffe heute einen Freund.",
+            "audio": "a1_nb01__der_freund__ex1_src.ogg"
+          },
+          "target": {
+            "text": "I'm meeting a friend today.",
+            "audio": "a1_nb01__der_freund__ex1_tgt.ogg"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a1_nb01__die_leute",
+      "key": "die_leute",
+      "type": "noun",
+      "added_at": "2026-09-20T10:00:00Z",
+      "word": {
+        "text": "die Leute",
+        "audio": "a1_nb01__die_leute__word.ogg"
+      },
+      "translation": {
+        "text": "people",
+        "audio": "a1_nb01__die_leute__translation.ogg"
+      },
+      "grammar": {
+        "plural_only": true
+      },
+      "examples": [
+        {
+          "n": 1,
+          "form": "base",
+          "kind": "statement",
+          "origin": "generated",
+          "source": {
+            "text": "Die Leute sind sehr nett.",
+            "audio": "a1_nb01__die_leute__ex1_src.ogg"
+          },
+          "target": {
+            "text": "The people are very nice.",
+            "audio": "a1_nb01__die_leute__ex1_tgt.ogg"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a1_nb01__fussball",
+      "key": "fussball",
+      "type": "noun",
+      "added_at": "2026-09-20T10:00:00Z",
+      "word": {
+        "text": "Fußball",
+        "audio": "a1_nb01__fussball__word.ogg"
+      },
+      "translation": {
+        "text": "football",
+        "audio": "a1_nb01__fussball__translation.ogg"
+      },
+      "grammar": {
+        "no_article": true,
+        "no_plural": true
+      },
+      "examples": [
+        {
+          "n": 1,
+          "form": "base",
+          "kind": "statement",
+          "origin": "textbook",
+          "source": {
+            "text": "Er spielt gern Fußball.",
+            "audio": "a1_nb01__fussball__ex1_src.ogg"
+          },
+          "target": {
+            "text": "He likes to play football.",
+            "audio": "a1_nb01__fussball__ex1_tgt.ogg"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a1_nb01__gehen",
+      "key": "gehen",
+      "type": "verb",
+      "added_at": "2026-09-20T10:00:00Z",
+      "word": {
+        "text": "gehen",
+        "audio": "a1_nb01__gehen__word.ogg"
+      },
+      "translation": {
+        "text": "to go",
+        "audio": "a1_nb01__gehen__translation.ogg"
+      },
+      "grammar": {
+        "present_3sg": "er geht",
+        "perfect": "ist gegangen"
+      },
+      "examples": [
+        {
+          "n": 1,
+          "form": "base",
+          "kind": "statement",
+          "origin": "textbook",
+          "source": {
+            "text": "Gehst du gern ins Kino?",
+            "audio": "a1_nb01__gehen__ex1_src.ogg"
+          },
+          "target": {
+            "text": "Do you like going to the cinema?",
+            "audio": "a1_nb01__gehen__ex1_tgt.ogg"
+          }
+        },
+        {
+          "n": 2,
+          "form": "base",
+          "kind": "qa",
+          "origin": "textbook",
+          "question": {
+            "source": {
+              "text": "Gehen wir ins Kino?",
+              "audio": "a1_nb01__gehen__ex2_q_src.ogg"
+            },
+            "target": {
+              "text": "Are we going to the cinema?",
+              "audio": "a1_nb01__gehen__ex2_q_tgt.ogg"
+            }
+          },
+          "answer": {
+            "source": {
+              "text": "Nein, das geht leider nicht.",
+              "audio": "a1_nb01__gehen__ex2_a_src.ogg"
+            },
+            "target": {
+              "text": "No, unfortunately that doesn't work.",
+              "audio": "a1_nb01__gehen__ex2_a_tgt.ogg"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a1_nb01__gehen_2",
+      "key": "gehen_2",
+      "type": "verb",
+      "added_at": "2026-09-20T10:00:00Z",
+      "word": {
+        "text": "gehen",
+        "audio": "a1_nb01__gehen_2__word.ogg"
+      },
+      "translation": {
+        "text": "here: to be okay",
+        "spoken": "to be okay",
+        "audio": "a1_nb01__gehen_2__translation.ogg"
+      },
+      "grammar": {
+        "present_3sg": "es geht",
+        "perfect": "ist gegangen"
+      },
+      "examples": [
+        {
+          "n": 1,
+          "form": "base",
+          "kind": "qa",
+          "origin": "textbook",
+          "question": {
+            "source": {
+              "text": "Hörst du gern Musik?",
+              "audio": "a1_nb01__gehen_2__ex1_q_src.ogg"
+            },
+            "target": {
+              "text": "Do you like listening to music?",
+              "audio": "a1_nb01__gehen_2__ex1_q_tgt.ogg"
+            }
+          },
+          "answer": {
+            "source": {
+              "text": "Es geht so.",
+              "audio": "a1_nb01__gehen_2__ex1_a_src.ogg"
+            },
+            "target": {
+              "text": "It's okay.",
+              "audio": "a1_nb01__gehen_2__ex1_a_tgt.ogg"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a1_nb01__in",
+      "key": "in",
+      "type": "other",
+      "added_at": "2026-09-20T10:00:00Z",
+      "word": {
+        "text": "in",
+        "audio": "a1_nb01__in__word.ogg"
+      },
+      "translation": {
+        "text": "in",
+        "audio": "a1_nb01__in__translation.ogg"
+      },
+      "note": "+ Dativ",
+      "examples": [
+        {
+          "n": 1,
+          "form": "base",
+          "kind": "statement",
+          "origin": "generated",
+          "source": {
+            "text": "Ich wohne in der Stadt.",
+            "audio": "a1_nb01__in__ex1_src.ogg"
+          },
+          "target": {
+            "text": "I live in the city.",
+            "audio": "a1_nb01__in__ex1_tgt.ogg"
+          }
+        }
+      ]
+    }
+  ]
+}

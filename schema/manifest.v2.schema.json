@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "pack_id",
+    "level",
+    "kind",
+    "number",
+    "source_lang",
+    "target_lang",
+    "audio_format",
+    "voices",
+    "created_at",
+    "generated_at",
+    "cards"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 2 },
+    "pack_id": {
+      "type": "string",
+      "pattern": "^(a1|a2|b1|b2)_(k|nb)\\d{2}$"
+    },
+    "level": {
+      "type": "string",
+      "enum": ["a1", "a2", "b1", "b2"]
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["textbook", "notebook"]
+    },
+    "number": { "type": "integer" },
+    "title": { "type": "string", "minLength": 1 },
+    "source_lang": { "type": "string", "minLength": 1 },
+    "target_lang": { "type": "string", "minLength": 1 },
+    "audio_format": { "type": "string", "minLength": 1 },
+    "voices": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["de", "en"],
+      "properties": {
+        "de": { "type": "string", "minLength": 1 },
+        "en": { "type": "string", "minLength": 1 }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "cards": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/card" }
+    }
+  },
+  "$defs": {
+    "text_line": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "audio"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "spoken": { "type": "string", "minLength": 1 },
+        "audio": { "type": "string", "minLength": 1 }
+      }
+    },
+    "qa_part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "target"],
+      "properties": {
+        "source": { "$ref": "#/$defs/text_line" },
+        "target": { "$ref": "#/$defs/text_line" }
+      }
+    },
+    "grammar_noun": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "article": {
+          "type": "string",
+          "enum": ["der", "die", "das", "der/die", "der/das"]
+        },
+        "no_article": { "type": "boolean", "const": true },
+        "plural": { "type": "string", "minLength": 1 },
+        "no_plural": { "type": "boolean", "const": true },
+        "plural_only": { "type": "boolean", "const": true },
+        "feminine": { "type": "string", "minLength": 1 },
+        "feminine_plural": { "type": "string", "minLength": 1 },
+        "feminine_translation": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["plural_only"] },
+          "then": { "not": { "anyOf": [ { "required": ["article"] }, { "required": ["plural"] } ] } }
+        },
+        {
+          "if": { "required": ["no_article"] },
+          "then": { "not": { "required": ["article"] } }
+        },
+        {
+          "if": { "required": ["no_plural"] },
+          "then": { "not": { "required": ["plural"] } }
+        }
+      ]
+    },
+    "grammar_verb": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "present_3sg": { "type": "string", "minLength": 1 },
+        "perfect": { "type": "string", "minLength": 1 }
+      }
+    },
+    "example": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n", "form", "kind", "origin"],
+      "properties": {
+        "n": { "type": "integer" },
+        "form": { "type": "string", "enum": ["base", "plural", "feminine"] },
+        "kind": { "type": "string", "enum": ["statement", "qa"] },
+        "origin": { "type": "string", "enum": ["textbook", "generated"] },
+        "source": { "$ref": "#/$defs/text_line" },
+        "target": { "$ref": "#/$defs/text_line" },
+        "question": { "$ref": "#/$defs/qa_part" },
+        "answer": { "$ref": "#/$defs/qa_part" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "statement" } } },
+          "then": {
+            "required": ["source", "target"],
+            "not": { "anyOf": [ { "required": ["question"] }, { "required": ["answer"] } ] }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "qa" } } },
+          "then": {
+            "required": ["question", "answer"],
+            "not": { "anyOf": [ { "required": ["source"] }, { "required": ["target"] } ] }
+          }
+        }
+      ]
+    },
+    "card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "key", "type", "added_at", "word", "translation", "examples"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_]+__[a-z0-9_]+$" },
+        "key": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "type": { "type": "string", "enum": ["noun", "verb", "other"] },
+        "added_at": { "type": "string", "format": "date-time" },
+        "word": { "$ref": "#/$defs/text_line" },
+        "translation": { "$ref": "#/$defs/text_line" },
+        "grammar": { "type": "object" },
+        "note": { "type": "string", "minLength": 1 },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "examples": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/example" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "noun" } } },
+          "then": {
+            "properties": {
+              "grammar": { "$ref": "#/$defs/grammar_noun" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "verb" } } },
+          "then": {
+            "properties": {
+              "grammar": { "$ref": "#/$defs/grammar_verb" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "other" } } },
+          "then": {
+            "not": { "required": ["grammar"] }
+          }
+        }
+      ]
+    }
+  }
+}

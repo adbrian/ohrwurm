@@ -1,0 +1,221 @@
+{
+  "schema_version": 2,
+  "pack_id": "a1_k02",
+  "level": "a1",
+  "kind": "textbook",
+  "number": 2,
+  "title": "Freunde, Kollegen und ich",
+  "source_lang": "de",
+  "target_lang": "en",
+  "audio_format": "opus",
+  "voices": {
+    "de": "de-DE-KatjaNeural",
+    "en": "en-GB-SoniaNeural"
+  },
+  "created_at": "2026-09-20T10:00:00Z",
+  "generated_at": "2026-09-23T14:30:00Z",
+  "cards": [
+    {
+      "id": "a1_k02__der_freund",
+      "key": "der_freund",
+      "type": "noun",
+      "added_at": "2026-09-20T10:00:00Z",
+      "word": {
+        "text": "der Freund",
+        "audio": "a1_k02__der_freund__word.ogg"
+      },
+      "translation": {
+        "text": "friend",
+        "audio": "a1_k02__der_freund__translation.ogg"
+      },
+      "grammar": {
+        "article": "der",
+        "plural": "die Freunde",
+        "feminine": "die Freundin",
+        "feminine_plural": "die Freundinnen",
+        "feminine_translation": "female friend, girlfriend"
+      },
+      "examples": [
+        {
+          "n": 1,
+          "form": "base",
+          "kind": "statement",
+          "origin": "generated",
+          "source": {
+            "text": "Mein Freund kommt aus Berlin.",
+            "audio": "a1_k02__der_freund__ex1_src.ogg"
+          },
+          "target": {
+            "text": "My friend comes from Berlin.",
+            "audio": "a1_k02__der_freund__ex1_tgt.ogg"
+          }
+        },
+        {
+          "n": 2,
+          "form": "base",
+          "kind": "qa",
+          "origin": "generated",
+          "question": {
+            "source": {
+              "text": "Hast du einen guten Freund?",
+              "audio": "a1_k02__der_freund__ex2_q_src.ogg"
+            },
+            "target": {
+              "text": "Do you have a good friend?",
+              "audio": "a1_k02__der_freund__ex2_q_tgt.ogg"
+            }
+          },
+          "answer": {
+            "source": {
+              "text": "Ja, mein Freund heißt Thomas.",
+              "audio": "a1_k02__der_freund__ex2_a_src.ogg"
+            },
+            "target": {
+              "text": "Yes, my friend is called Thomas.",
+              "audio": "a1_k02__der_freund__ex2_a_tgt.ogg"
+            }
+          }
+        },
+        {
+          "n": 3,
+          "form": "plural",
+          "kind": "statement",
+          "origin": "generated",
+          "source": {
+            "text": "Meine Freunde wohnen in München.",
+            "audio": "a1_k02__der_freund__ex3_src.ogg"
+          },
+          "target": {
+            "text": "My friends live in Munich.",
+            "audio": "a1_k02__der_freund__ex3_tgt.ogg"
+          }
+        },
+        {
+          "n": 4,
+          "form": "feminine",
+          "kind": "statement",
+          "origin": "generated",
+          "source": {
+            "text": "Meine Freundin tanzt gern.",
+            "audio": "a1_k02__der_freund__ex4_src.ogg"
+          },
+          "target": {
+            "text": "My girlfriend likes to dance.",
+            "audio": "a1_k02__der_freund__ex4_tgt.ogg"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a1_k02__singen",
+      "key": "singen",
+      "type": "verb",
+      "added_at": "2026-09-20T10:00:00Z",
+      "word": {
+        "text": "singen",
+        "audio": "a1_k02__singen__word.ogg"
+      },
+      "translation": {
+        "text": "to sing",
+        "audio": "a1_k02__singen__translation.ogg"
+      },
+      "grammar": {
+        "present_3sg": "er singt",
+        "perfect": "hat gesungen"
+      },
+      "examples": [
+        {
+          "n": 1,
+          "form": "base",
+          "kind": "statement",
+          "origin": "textbook",
+          "source": {
+            "text": "Sie singt sehr gern.",
+            "audio": "a1_k02__singen__ex1_src.ogg"
+          },
+          "target": {
+            "text": "She likes singing very much.",
+            "audio": "a1_k02__singen__ex1_tgt.ogg"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a1_k02__heissen",
+      "key": "heissen",
+      "type": "verb",
+      "added_at": "2026-09-20T10:00:00Z",
+      "word": {
+        "text": "heißen",
+        "audio": "a1_k02__heissen__word.ogg"
+      },
+      "translation": {
+        "text": "to be named / called",
+        "spoken": "to be named, or called",
+        "audio": "a1_k02__heissen__translation.ogg"
+      },
+      "grammar": {
+        "present_3sg": "er heißt",
+        "perfect": "hat geheißen"
+      },
+      "examples": [
+        {
+          "n": 1,
+          "form": "base",
+          "kind": "statement",
+          "origin": "generated",
+          "source": {
+            "text": "Wie heißt die neue Kollegin?",
+            "audio": "a1_k02__heissen__ex1_src.ogg"
+          },
+          "target": {
+            "text": "What is the new colleague called?",
+            "audio": "a1_k02__heissen__ex1_tgt.ogg"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a1_k02__gern",
+      "key": "gern",
+      "type": "other",
+      "added_at": "2026-09-20T10:00:00Z",
+      "word": {
+        "text": "gern",
+        "audio": "a1_k02__gern__word.ogg"
+      },
+      "translation": {
+        "text": "gladly",
+        "audio": "a1_k02__gern__translation.ogg"
+      },
+      "examples": [
+        {
+          "n": 1,
+          "form": "base",
+          "kind": "qa",
+          "origin": "textbook",
+          "question": {
+            "source": {
+              "text": "Liest du gern?",
+              "audio": "a1_k02__gern__ex1_q_src.ogg"
+            },
+            "target": {
+              "text": "Do you like to read?",
+              "audio": "a1_k02__gern__ex1_q_tgt.ogg"
+            }
+          },
+          "answer": {
+            "source": {
+              "text": "Ja, sehr gern.",
+              "audio": "a1_k02__gern__ex1_a_src.ogg"
+            },
+            "target": {
+              "text": "Yes, very much.",
+              "audio": "a1_k02__gern__ex1_a_tgt.ogg"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
