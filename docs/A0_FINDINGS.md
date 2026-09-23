@@ -113,13 +113,22 @@ Release build. "Warm" = app already run since boot; "after reboot" = first run a
    filesystem paths. The interface type fits; only the parameter name is misleading (A3).
 7. **Android 10 vs 14 differences** seen so far: no confirmation dialog on 10; `file_picker` path
    access is fully denied on 10 and read-denied on 14. SAF behaved the same on both.
+8. **People can pick a pack folder instead of the folder that holds packs.** In a hand test on the
+   POCO, the picker returned `ohrwurm-packs/a1_k02` and `ohrwurm-packs/b2_k99`, not
+   `ohrwurm-packs`. The picker confirms whichever folder it is showing, and without a starting
+   folder it reopens wherever it was last left — here, inside a pack. The spike assumed it had the
+   root and failed with "No such file or directory". SAF returned exactly what was picked, so this
+   is not a problem with approach (a). The app must recognise a picked folder that itself contains
+   `manifest.json` and ask for the folder that contains the packs (APP_SPEC 5.1).
 
-## Open questions for Ian
+## Decisions (2026-09-23)
 
-1. Adopt (a) with `saf_util` + `saf_stream`?
-2. Activity recreation (finding 5): keep the engine alive across recreation (a cached
-   `FlutterEngine`), make rescan and session state safe to restart, or both? This affects A1's
-   project setup.
-3. Mid-session clip failure under (a): skip to the next line, stop the card, or show an error?
-   Not in the spec today.
-4. `ClipPlayer.play(String path)` → rename to `uri`? It touches the spec's interface text.
+Recorded in `docs/APP_SPEC.md`:
+
+- **Approach (a)**, with `saf_util` + `saf_stream` (5.1, 3).
+- **Restart-safe rescans and sessions** rather than keeping the engine alive (5.2, 11.5).
+- **`ClipPlayer.play(String uri)`** (11.1).
+- **Preload the next clip** to hide load time; the mechanism is designed in A3's plan (11.1).
+- Findings 1–4 and 8 → 5.1–5.3; finding 5 → 5.2 and 11.5; finding 6 → 11.1.
+
+Still open: **what happens when a clip fails to load mid-session** (APP_SPEC 17). Needed by A4.

@@ -52,7 +52,7 @@ testing are done in Anki, which is outside this app.
 - Flutter, Android first. The Flutter project is the repository root.
 - **Minimum Android 10 (API 29)** — the primary device is a POCO F1 on Android 10.
 - Packages: `sqflite` (plus `sqflite_common_ffi` for tests), `path_provider`, `just_audio`,
-  `audio_session`, `file_picker` or a storage-access package chosen in step A0,
+  `audio_session`, `saf_util` and `saf_stream` (folder access, chosen in A0; not `file_picker`),
   `shared_preferences`, `wakelock_plus`, `record`, `permission_handler`, and a JSON Schema
   validator (see 4.1).
 - State management: keep it simple and consistent. Propose one in step A1 and justify it; don't
@@ -158,17 +158,22 @@ Each example has `n`, `form` (`base` / `plural` / `feminine`), `kind` (`statemen
 The user picks a root folder once. Each immediate subfolder that contains `manifest.json` is a
 candidate pack. Other subfolders are ignored silently.
 
-**How the app gets at those files on Android is decided in step A0**, by a spike on a real device:
+**Decided in A0: (a) read in place** (see `docs/A0_FINDINGS.md`). The folder is picked with the
+Storage Access Framework and a persisted read permission is kept; manifests are read and clips
+played from there, through `content://` URIs. Nothing is copied into app storage.
 
-- **(a) Read in place** — persisted storage-access permission on the chosen folder; audio played
-  from there. Preferred: no duplicated storage.
-- **(b) Copy on import** — rescan copies new or changed packs into app-private storage; playback
-  always from there. Fallback if (a) proves unreliable for playback or permissions.
+- Pick with `saf_util.pickDirectory` with a persistable permission. List with `saf_util.list`;
+  read files with `saf_stream`.
+- **Store the tree URI** (`…/tree/<id>`) in `shared_preferences`, not the
+  `…/tree/<id>/document/<id>` form `pickDirectory` returns — the permission is held on the tree URI.
+- **Picked a pack folder instead of the root.** If the chosen folder itself contains
+  `manifest.json`, it is a single pack, not the folder that holds packs. Don't scan it as a root
+  (it would find no packs, or the wrong ones); say that this looks like one pack and ask the user to
+  pick the folder that contains their pack folders.
 
-A0 must prove, on **both** the POCO F1 (Android 10) and an Android 14 (API 34) emulator: pick a
-folder → read a manifest → play an `.ogg` clip from a pack → relaunch the app → play again **without
-re-picking**. Report which approach works, and the trade-offs, before anything else is built. The
-rest of this section applies to either approach.
+A0 was proven on both the POCO F1 (Android 10) and an Android 14 (API 34) emulator: pick folder →
+read manifest → play an `.ogg` → relaunch → play again without re-picking; also after reboot and
+app update.
 
 ### 5.2 Rescan
 
@@ -176,7 +181,9 @@ On launch and from a **Rescan** action. For each candidate pack:
 
 1. Validate the manifest against the schema.
 2. Check `pack_id` equals the folder name, `audio_format` is playable, and **every referenced clip
-   exists**.
+   exists**. List the pack folder **once** and compare names against the manifest's references.
+   Never look clips up one at a time: through the storage framework that costs about 0.1–0.2 s per
+   clip, minutes per chapter (A0).
 3. **Any failure rejects the whole pack.** A pack with a missing clip would fail mid-session, where
    the user can't diagnose it.
 4. Reconcile with the database:
@@ -186,12 +193,22 @@ On launch and from a **Rescan** action. For each candidate pack:
    - known pack no longer found → mark unavailable, keep its rows
 5. **Never touch progress** in any of these.
 
+**Restart-safe.** Android can recreate the activity at any moment, restarting the Dart side (A0
+finding 5). Each pack is reconciled in a **single database transaction**, so an interrupted rescan
+leaves every pack either fully old or fully new; the next rescan completes the work.
+
 Report: added, updated, unchanged, unavailable, rejected (with the reason for each rejection).
 
 ### 5.3 Stale access
 
 If folder access is lost — moved, revoked, storage unmounted — prompt to re-select. **Never show an
 empty library**, which reads as "my packs are gone".
+
+- **Check the root folder itself**, not whether listing succeeds. A moved or deleted folder lists as
+  empty, without an error, and its permission still reports as held (A0). Access is lost when the
+  root doesn't `stat`, the persisted permission is gone, or access throws.
+- **Offer *Try again* before re-selecting**, and keep the saved folder. Shortly after boot, shared
+  storage can briefly look missing and then reappear intact (A0).
 
 ---
 
@@ -366,13 +383,23 @@ selection**. Reached by swiping like any card; not a modal.
 
 ```dart
 abstract class ClipPlayer {
-  Future<void> play(String path); // completes when the clip finishes OR when stop() is called
+  Future<void> play(String uri); // completes when the clip finishes OR when stop() is called
   Future<void> stop();
 }
 ```
 
 The real implementation wraps `just_audio`. A `FakeClipPlayer` backed by timers is used for all
 engine tests. The engine never imports `just_audio`.
+
+Clips are addressed by **URI** — `content://` under the storage approach chosen in A0, not file
+paths.
+
+**Preload the next clip.** Loading a clip from the pack folder takes about 60–170 ms, and 450–550 ms
+for the first clip after install or reboot (A0); unhidden, that lands inside `play()` and lengthens
+every pause. The real player prepares the next clip ahead of time so `play()` starts promptly. How
+the engine tells the player which clip is next is designed in A3's plan; it must not add an `await`
+to the engine without a generation check after it (11.3), and must not change `play`/`stop`
+semantics.
 
 ### 11.2 Algorithm
 
@@ -387,7 +414,7 @@ playCard(card, myGen):
     for step in recipe.steps(card):
       if myGen != gen: return
       highlight(step)
-      await player.play(step.clipPath)
+      await player.play(step.clipUri)
       if myGen != gen: return
       await sleep(pauseAfter(step))
       if myGen != gen: return
@@ -439,6 +466,11 @@ understand before the English arrives.
 - **Wakelock** (`wakelock_plus`): held while a session screen is open; released on leaving it and
   when the app goes to the background.
 - **App backgrounded**: stop playback; on return, restart the current card from its first line.
+- **Restart-safe sessions.** Android can recreate the activity and restart the Dart side at any
+  moment (A0). Nothing needed to resume may live only in memory: position is already written on
+  every advance (10.2), and after a restart the session resumes at the saved position and the
+  current card restarts from its first line, as when backgrounded. A card interrupted this way is
+  not marked heard.
 
 ### 11.6 Required tests — write these first
 
@@ -542,7 +574,8 @@ Once the pipeline produces real packs, test against those as well.
 
 | Question | Position |
 |---|---|
-| Storage approach | Decided in A0 |
+| Storage approach | **Decided in A0:** (a) read in place, `saf_util` + `saf_stream` (5.1) |
+| Clip fails to load mid-session (e.g. files removed from the folder after a scan) | **Undecided.** Skip the line, stop the card, or show an error — needed by A4 |
 | Colour-coding by article | On hold |
 | Displaying Mirror recording counts | Undecided |
 | iOS | Later. Opus may need `.caf` on iOS; `audio_format` already allows for it |
