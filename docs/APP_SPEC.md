@@ -50,6 +50,7 @@ testing are done in Anki, which is outside this app.
 ## 3. Platform and stack
 
 - Flutter, Android first. The Flutter project is the repository root.
+- **Minimum Android 10 (API 29)** — the primary device is a POCO F1 on Android 10.
 - Packages: `sqflite` (plus `sqflite_common_ffi` for tests), `path_provider`, `just_audio`,
   `audio_session`, `file_picker` or a storage-access package chosen in step A0,
   `shared_preferences`, `wakelock_plus`, `record`, `permission_handler`, and a JSON Schema
@@ -164,9 +165,10 @@ candidate pack. Other subfolders are ignored silently.
 - **(b) Copy on import** — rescan copies new or changed packs into app-private storage; playback
   always from there. Fallback if (a) proves unreliable for playback or permissions.
 
-A0 must prove, on Android 13 or later: pick a folder → read a manifest → play an `.ogg` clip from a
-pack → relaunch the app → play again **without re-picking**. Report which approach works, and the
-trade-offs, before anything else is built. The rest of this section applies to either approach.
+A0 must prove, on **both** the POCO F1 (Android 10) and an Android 14 (API 34) emulator: pick a
+folder → read a manifest → play an `.ogg` clip from a pack → relaunch the app → play again **without
+re-picking**. Report which approach works, and the trade-offs, before anything else is built. The
+rest of this section applies to either approach.
 
 ### 5.2 Rescan
 
@@ -505,7 +507,7 @@ Left and right are reserved for possible future use — don't bind anything else
 
 | Step | Build | Done when |
 |---|---|---|
-| **A0** | Storage and playback spike (5.1) | On an Android 13+ device: pick folder → read manifest → play an `.ogg` → relaunch → play again without re-picking. Approach chosen with trade-offs. **Stop for review** |
+| **A0** | Storage and playback spike (5.1) | On the POCO F1 (Android 10) and an Android 14 emulator: pick folder → read manifest → play an `.ogg` → relaunch → play again without re-picking. Approach chosen with trade-offs. **Stop for review** |
 | **A1** | `flutter create`, theme tokens from DESIGN.md, database schema, data-access layer + tests | Schema created on first launch; data-access tests pass on desktop via `sqflite_common_ffi` |
 | **A2** | Schema validation, rescan and reconcile, pack list screen | With the fixture packs: valid packs load; `a1_k03` rejected for a missing clip; `notes` ignored; updating a pack keeps progress; unavailable pack stays listed |
 | **A3** | Playback engine + `FakeClipPlayer`; tests from 11.6 written first | All 11.6 tests pass |
