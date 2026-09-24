@@ -142,9 +142,14 @@ class ManifestCheck {
   final PackManifest? manifest;
   final Rejection? rejection;
 
-  const ManifestCheck.accepted(PackManifest this.manifest) : rejection = null;
+  /// The pack as its manifest describes it, when the manifest was valid against the schema.
+  final PackInput? pack;
 
-  const ManifestCheck.rejected(Rejection this.rejection) : manifest = null;
+  ManifestCheck.accepted(PackManifest this.manifest)
+      : rejection = null,
+        pack = manifest.pack;
+
+  const ManifestCheck.rejected(Rejection this.rejection, {this.pack}) : manifest = null;
 }
 
 /// Runs the checks of APP_SPEC 5.2, step 2, on one pack folder. Any failure rejects the whole
@@ -167,11 +172,13 @@ ManifestCheck checkManifest({
 
   final manifest = PackManifest.read(json as Map<String, dynamic>);
   final pack = manifest.pack;
-  if (pack.packId != folderName) return ManifestCheck.rejected(FolderMismatch(pack.packId));
+  if (pack.packId != folderName) {
+    return ManifestCheck.rejected(FolderMismatch(pack.packId), pack: pack);
+  }
   if (!playableAudioFormats.contains(pack.audioFormat)) {
-    return ManifestCheck.rejected(UnplayableAudio(pack.audioFormat));
+    return ManifestCheck.rejected(UnplayableAudio(pack.audioFormat), pack: pack);
   }
   final missing = manifest.clips.where((c) => !clipNames.contains(c)).toList()..sort();
-  if (missing.isNotEmpty) return ManifestCheck.rejected(ClipsMissing(missing));
+  if (missing.isNotEmpty) return ManifestCheck.rejected(ClipsMissing(missing), pack: pack);
   return ManifestCheck.accepted(manifest);
 }
