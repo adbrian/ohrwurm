@@ -3,6 +3,7 @@ import 'dart:isolate';
 import '../data/models.dart';
 import '../data/pack_dao.dart';
 import 'manifest.dart';
+import 'pack_display.dart';
 import 'pack_storage.dart';
 
 /// What happened to one subfolder, or one known pack, in a rescan (APP_SPEC 5.2).
@@ -242,17 +243,7 @@ class Rescanner {
     );
   }
 
-  static PackInput? _input(Pack? p) => p == null
-      ? null
-      : PackInput(
-          packId: p.packId,
-          level: p.level,
-          kind: p.kind,
-          number: p.number,
-          title: p.title,
-          audioFormat: p.audioFormat,
-          generatedAt: p.generatedAt,
-        );
+  static PackInput? _input(Pack? p) => p == null ? null : packInputOf(p);
 }
 
 /// APP_SPEC 4.3: level, then textbook before notebook, then number. Rows without a pack

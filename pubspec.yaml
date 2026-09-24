@@ -27,6 +27,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  # The manifest schema, used as it is (CLAUDE.md, rule 1).
+  assets:
+    - schema/manifest.v2.schema.json
+
   fonts:
     # Inter 4.1 (rsms/inter), SIL Open Font License 1.1: assets/fonts/OFL.txt
     - family: Inter

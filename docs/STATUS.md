@@ -1,70 +1,68 @@
 # Status
 
-A0 and A1 complete. **A2 in progress** (started 2026-09-24): work in progress on branch `a2`, to be
-continued in a cloud session.
+A0 and A1 complete. **A2 built and tested on desktop** (branch `a2`); the device runs on the POCO
+and emulator are still to do.
 
 ## Next step
 
-**Continue building A2** (APP_SPEC 15) on branch `a2`, per the approved plan and the 2026-09-24 A2
-decisions below. Test with the fixture packs **and** the real pipeline pack `a1_k01`. Propose the
-new wording for Ian's review.
+**A2 device runs** (needs Ian's machine and a local session, not the cloud): on the POCO and the
+API 34 emulator, first launch → *Choose folder* → `Download/ohrwurm-packs`; check the result
+screen (`a1_k01`, `a1_k02`, `a1_nb01`, `b2_k99` added; `a1_k03` *not loaded · 1 audio file
+missing*; `notes` skipped), relaunch (library appears at once, no result screen unless something
+changed), picking a pack folder as the root, stale access (rename the folder, relaunch, *Try
+again*), and **rescan timings** for `a1_k01` and the 1,500-clip `b2_k99`. Then Ian reviews the
+wording and the open points below, and A2 is reported done.
 
 ## A2 progress
 
-The full approved plan is in the Decisions table and in APP_SPEC 5; this is what exists so far.
-`flutter analyze` is clean on what's written; no A2 tests yet.
+`flutter analyze` clean; `flutter test` 116 passing (Flutter 3.47.2, as in `.metadata`).
 
-**Written (committed on `a2` as work in progress):**
-- `pubspec.yaml`: added `json_schema` 5.2.2, `saf_util` ^3.1.0, `saf_stream` ^4.0.1,
-  `shared_preferences` ^2.5.5.
-- `lib/packs/pack_storage.dart`: `PackStorage` interface (`pickFolder`, `checkRoot` →
-  `RootAccess.ok/missing/denied`, `list`, `readText`, `describe`) and `StorageEntry`.
-- `lib/packs/saf_pack_storage.dart`: SAF implementation. Stores/returns the **tree** URI;
-  converts it to the root's document form (`…/tree/<id>/document/<id>`) before calling
-  `saf_util`, because `hasPersistedPermission` compares by document id and would fail on a bare
-  tree URI. `describe` turns `primary:Download/ohrwurm-packs` into `Download/ohrwurm-packs`.
-- `lib/packs/manifest.dart`: `ManifestValidator` (format not asserted), `PackManifest.read`
-  (PackInput, CardRows in manifest order with `has_*` flags, `content_json`, referenced clips),
-  `Rejection` subclasses (`ManifestUnreadable`, `SchemaInvalid`, `FolderMismatch`,
-  `UnplayableAudio`, `ClipsMissing`, `SaveFailed`), and pure `checkManifest(...)` that runs the
-  5.2 step 2 checks in order: JSON → schema → `pack_id` = folder → `audio_format` playable →
-  every clip in the single folder listing.
-- `test/fixtures/real/a1_k01_manifest.json`: pulled from the POCO (`generated_at`
-  2026-09-24T12:49:53Z, 200 cards). Still needs a README beside it marking it as a pipeline
-  snapshot (JSON can't hold a comment, and an extra field would fail the schema).
-
-**Still to do:**
-1. `lib/packs/rescanner.dart` — drafted in the session but **not saved**. Design: check root
-   (not ok → `RootUnavailable`, DB untouched); root listing contains `manifest.json` →
-   `RootIsAPack`, DB untouched; per subfolder: list once, no manifest → skipped, else
-   `checkManifest` inside `Isolate.run` (validating a chapter would drop frames), then new →
-   `replacePack` (added), different `generated_at` → `replacePack` (updated), same → unchanged
-   (`setAvailable(true)` if it was unavailable); a `replacePack` failure → rejected `SaveFailed`.
-   Known packs not found, or rejected, → `setAvailable(false)`, rows kept. Report rows sorted by
-   APP_SPEC 4.3, non-packs by folder name after; `changed` = any added/updated/rejected/newly
-   unavailable. Never touches progress.
-2. `DirectoryPackStorage` (`dart:io`) under `test/` for desktop rescan tests.
-3. A library controller (`ChangeNotifier`, provider): saved tree URI in `shared_preferences`;
-   shows the library from the DB at once and rescans in the background; guards against two
-   rescans at once.
-4. Screens: first launch (DESIGN 1), rescan result (DESIGN 2), read-only library (DESIGN 4 cards),
-   stale access (*Try again*, then choose folder), "looks like one pack". Declare
-   `schema/manifest.v2.schema.json` as an asset (don't copy or edit it).
-5. Tests from the plan: validator (valid fixtures, `a1_k01`, the 25 single-point breakages built
-   at test time), manifest reader, rescan on a temp copy of the fixtures, widget tests; update
-   `test/app_test.dart` for the new home screen.
-6. Device runs on the POCO and emulator (needs Ian's machine, not the cloud), with rescan timings.
+**Built:**
+- `lib/packs/`: `PackStorage` + `SafPackStorage` (SAF, tree URI stored); `manifest.dart`
+  (`ManifestValidator` on `json_schema` 5.2.2 without format assertion, `PackManifest.read`,
+  `Rejection`s, pure `checkManifest`); `rescanner.dart` (APP_SPEC 5.2: checks the root, spots a
+  pack folder picked as root, lists each subfolder once, validates in `Isolate.run`, reconciles one
+  transaction per pack, marks missing or rejected known packs unavailable, never touches
+  progress); `pack_display.dart` (headings, meta lines, 4.3 labels).
+- `lib/library/`: `LibraryController` (`ChangeNotifier`; folder URI in `shared_preferences` via
+  `SharedPreferencesAsync`; shows the library from the database at once and rescans behind it;
+  one rescan at a time; the folder is saved only after it scans as a folder of packs); screens:
+  first launch (DESIGN 1), rescan result (DESIGN 2), read-only library (DESIGN 4 cards), stale
+  access, "looks like one pack", and a plain-text first-scan screen; all wording in `copy.dart`.
+- `schema/manifest.v2.schema.json` declared as an asset and loaded as it is.
+- Tests: validator (4 valid manifests incl. `a1_k01`, 25 single-point breakages in
+  `test/packs/manifest_breakages.dart`, all 29 cross-checked against Python `jsonschema`),
+  reader, `checkManifest`, rescan on a temp copy of the fixtures via `DirectoryPackStorage`
+  (the A2 "done when" cases: valid packs load, `a1_k03` rejected whole, `notes` ignored, an update
+  keeps progress, an unavailable pack stays listed), controller, and widget tests.
+- `test/fixtures/real/README.md` marks `a1_k01_manifest.json` as a pipeline snapshot.
 
 **Open points to raise with Ian when reporting A2** (Claude's working choices, not decided):
-- Icons: DESIGN says Phosphor, which isn't in the package list; using Material outlined icons as
-  a stand-in unless Ian approves `phosphor_flutter`.
-- A known pack rejected on rescan would show the library tag *Not found*, which is inaccurate.
-- DESIGN's verdict *Nothing else changed* is misleading when the same rescan also added packs.
+- Icons: DESIGN says Phosphor, which isn't in the package list; Material outlined icons stand in
+  (`AppIcons` in `lib/library/widgets.dart`) unless Ian approves `phosphor_flutter`.
+- A known pack rejected on rescan shows the library tag *Not found*, which is inaccurate.
+- DESIGN's verdict *Nothing else changed* is untrue when the same rescan loaded packs; in that case
+  the panel says *One pack wasn't loaded. The rest are ready.* instead.
+- The result screen has a back arrow to the library: with a rejection, DESIGN's only button is
+  *Rescan*, which gives no way on.
+- An empty folder (no packs, nothing rejected): neutral panel *No packs in this folder yet. Copy
+  your pack folders into it, then rescan.*, button *Rescan*; the library shows the same line.
+- *Not found* rows also appear on the result screen (ringed disc, *not found · progress kept*).
+  A rejected pack is reported on every rescan, so a broken pack shows the result screen at each
+  launch until it's fixed.
+- "Ringed" disc drawn as a thick neutral ring; hollow as a thin one.
 - A2 has no *Change folder* outside the stale-access screen (Settings is later).
-- Proposed wording (for review): *not loaded · N audio files missing*, *not loaded · manifest
-  couldn't be read*, *not loaded · manifest doesn't match the pack format*, *not loaded · folder
-  name doesn't match the pack (a1_k02)*, *not loaded · audio format mp3 isn't supported*;
-  known packs add *· progress kept*; missing pack *not found · progress kept*.
+- Proposed wording (all in `lib/library/copy.dart`): rejection reasons *not loaded · N audio
+  files missing*, *· manifest couldn't be read*, *· manifest doesn't match the pack format*,
+  *· folder name doesn't match the pack (a1_k02)*, *· audio format mp3 isn't supported*,
+  *· couldn't be saved on this phone*; known packs add *· progress kept*; missing pack *not found ·
+  progress kept*. Stale access: *Can't reach your pack folder*, the folder tile, *The folder may
+  have moved, or the phone's storage may not be ready yet. That can happen just after it starts
+  up.* (or *Ohrwurm no longer has permission to read it.*) *Nothing has been deleted. Your packs
+  and progress are kept on this phone.*, **Try again**, **Choose folder**. One pack: *That looks
+  like one pack* / *The folder you picked has a manifest in it, so it holds a single pack. Choose
+  the folder your pack folders are in, usually the one above it.* Library heading *Your packs*,
+  *Checking the folder…* while a rescan runs; first scan *Reading your packs…*.
 
 ## Done
 
@@ -112,6 +110,7 @@ so. APP_SPEC and DESIGN remain the source of truth for behaviour; this is the lo
 | 2026-09-24 | **Rescan never blocks the library**: show the library from the database immediately, rescan in the background, update when done | Ian's addition; reason not stated |
 | 2026-09-24 | Wording not in DESIGN (stale access, *Try again*, "looks like one pack", rejection reasons): Claude proposes it in DESIGN's voice, **describing failures by what was protected**; Ian reviews | Reason not stated; DESIGN's Copy section already asks for failures described by what was protected |
 | 2026-09-24 | Push A2 work in progress and continue it in a cloud session | Ian's choice; reason not stated |
+| 2026-09-24 | Continue A2 in a cloud session on branch `a2`; device tests only when needed, in a local session | Ian's instruction |
 | 2026-09-24 | Don't commit `a1_k01`'s audio. **Commit its manifest** as `test/fixtures/real/a1_k01_manifest.json`, marked as a pipeline snapshot, with a validator test that it passes | Cross-repo check that the app's and pipeline's schema copies still agree; the audio is 21 MB |
 
 ## Pending

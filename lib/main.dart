@@ -1,13 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'data/app_database.dart';
+import 'library/home.dart';
+import 'library/library_controller.dart';
+import 'packs/rescanner.dart';
+import 'packs/saf_pack_storage.dart';
 import 'theme/app_theme.dart';
+
+/// The manifest schema, bundled from `schema/` as it is: never copied or edited (CLAUDE.md,
+/// rule 1).
+const schemaAsset = 'schema/manifest.v2.schema.json';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final database = await AppDatabase.open();
-  runApp(Provider<AppDatabase>.value(value: database, child: const OhrwurmApp()));
+  final storage = SafPackStorage();
+  final library = LibraryController(
+    storage: storage,
+    packDao: database.packs,
+    rescanner: Rescanner(
+      storage: storage,
+      packs: database.packs,
+      schemaJson: await rootBundle.loadString(schemaAsset),
+    ),
+    folderStore: PrefsRootFolderStore(),
+  );
+  runApp(MultiProvider(
+    providers: [
+      Provider<AppDatabase>.value(value: database),
+      ChangeNotifierProvider<LibraryController>.value(value: library),
+    ],
+    child: const OhrwurmApp(),
+  ));
+  // The library shows from the database straight away; the rescan runs behind it.
+  await library.start();
 }
 
 class OhrwurmApp extends StatelessWidget {
@@ -19,19 +47,7 @@ class OhrwurmApp extends StatelessWidget {
       title: 'Ohrwurm',
       theme: buildAppTheme(),
       debugShowCheckedModeBanner: false,
-      home: const _Placeholder(),
-    );
-  }
-}
-
-/// Stands in until the first-launch and pack screens arrive in step A2.
-class _Placeholder extends StatelessWidget {
-  const _Placeholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(child: Text('Ohrwurm', style: AppText.german(30))),
+      home: const HomeScreen(),
     );
   }
 }
