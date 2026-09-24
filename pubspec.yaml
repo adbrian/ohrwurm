@@ -10,8 +10,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  json_schema: 5.2.2
   path: ^1.9.0
   provider: ^6.1.5
+  saf_stream: ^4.0.1
+  saf_util: ^3.1.0
+  shared_preferences: ^2.5.5
   sqflite: ^2.4.2
 
 dev_dependencies:
