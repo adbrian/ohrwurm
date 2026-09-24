@@ -1,17 +1,15 @@
 # Status
 
-A0 and A1 complete. **A2 built and tested on desktop, and on both devices (2026-09-24)**: every
-device check passed on the POCO and the emulator (branch `a2`). Ian reviewed the device findings
-and open points the same day; a cloud session made the changes he decided (Decisions, below). **The
-device re-check ran the same day (A2 re-check, below): 11 of 12 pass on both devices; re-check 1
-fails on the POCO only** (a white navigation bar for about half a second at the first frame). Not
-yet reported done.
+A0, A1 and **A2 complete (2026-09-24, branch `a2`)**. A2 was tested on desktop and on both
+devices, reviewed by Ian, changed as he decided, and re-checked on both devices (A2 re-check,
+below): 11 of 12 pass on both. Re-check 1 fails on the POCO only (the navigation bar turns white
+for about half a second at the first frame); **Ian accepted it as is** (Decisions; kept under
+Pending as a known issue with the likely fix).
 
 ## Next step
 
-**Ian decides what to do about re-check 1 on the POCO** (A2 re-check, below): the launch window is
-dark, but the system navigation bar turns white for about 0.3–0.45 s as Flutter draws its first
-frame. Everything else in the re-check passed. Then A2 is reported done. Don't start A3.
+**A2 is done.** The next build step is **A3** (APP_SPEC 15: playback engine + `FakeClipPlayer`,
+tests from 11.6 written first), planned first and started only when Ian asks.
 
 The re-check instructions below were run on 2026-09-24 (local session) and are kept for reference.
 
@@ -49,7 +47,7 @@ down during a pause and was restarted before its re-checks; its app data was una
 
 | # | Re-check | POCO F1 (Android 10) | Emulator (Android 14) |
 |---|---|---|---|
-| 1 | Launch window | **Fail (partly).** Dark (`#0E0E13`) from the tap in both launches, no white window. But the **system navigation bar turns white** for ≈0.3 s (first launch) and ≈0.45 s (second) as Flutter draws its first frame, then dark again. `poco/01b-white-nav-bar-at-first-frame.png` | Pass. Dark from the first frame; Android 14's splash shows the app icon on dark; the navigation bar stays dark |
+| 1 | Launch window | **Fail (partly).** Dark (`#0E0E13`) from the tap in both launches, no white window. But the **system navigation bar turns white** for ≈0.3 s (first launch) and ≈0.45 s (second) as Flutter draws its first frame, then dark again. `poco/01b-white-nav-bar-at-first-frame.png`. **Accepted as is by Ian (Decisions; Pending has the likely fix)** | Pass. Dark from the first frame; Android 14's splash shows the app icon on dark; the navigation bar stays dark |
 | 2 | First launch after the install | Pass: the result screen once | Pass |
 | 3 | Result rows | Pass: all six rows exactly as specified, incl. *Guten Tag!* / *A1 · Chapter 1 · unchanged* | Pass (no `a1_k01`) |
 | 4 | Icons | Pass: back arrow, folder and rescan are thin Phosphor strokes, no boxes | Pass |
@@ -212,6 +210,11 @@ before Ian's review changes.
   session). `flutter analyze` clean, `flutter test` 36 passing. **On the POCO (2026-09-24):** first
   launch creates `databases/ohrwurm.db` with the four tables and both indexes, `user_version` 1,
   integrity ok, no foreign keys; a second launch reopens it without rewriting it.
+- **A2** — schema validation, rescan and reconcile, read-only library, on branch `a2` (not yet
+  merged to `main`). `flutter analyze` clean, `flutter test` 128 passing. Device checks and the
+  re-check after Ian's review pass on the POCO F1 and the API 34 emulator, except the POCO's white
+  navigation bar at the first frame, accepted as is (A2 re-check; Pending). Reported done
+  2026-09-24.
 
 ## Decisions
 
@@ -265,6 +268,7 @@ so. APP_SPEC and DESIGN remain the source of truth for behaviour; this is the lo
 | 2026-09-24 | **No *Change folder* outside the stale-access screen until Settings** (APP_SPEC 14); Settings has no build step yet — which step gets it is Ian's call | Ian gave no reason. Claude's case: the spec puts it in Settings; Ian's folder is fixed |
 | 2026-09-24 | **A2 wording approved as proposed** (`lib/library/copy.dart`, listed in DESIGN 2 and 4 and in the device re-check), plus *Not loaded* | Ian gave no reason |
 | 2026-09-24 | Don't commit `a1_k01`'s audio. **Commit its manifest** as `test/fixtures/real/a1_k01_manifest.json`, marked as a pipeline snapshot, with a validator test that it passes | Cross-repo check that the app's and pipeline's schema copies still agree; the audio is 21 MB |
+| 2026-09-24 | **Accept the POCO's white navigation bar at the first frame as is** (A2 re-check 1): no fix now; kept under Pending as a known issue so it can be fixed later. **A2 reported done** | Ian gave no reason. Claude had recommended fixing it (every cold start on Android 10, the minimum version; a small, contained change) |
 
 ## Pending
 
@@ -275,6 +279,17 @@ so. APP_SPEC and DESIGN remain the source of truth for behaviour; this is the lo
 - **Rescan cost per chapter** — decide after the phase timings in the A2 re-check (row 12) whether
   unchanged packs should skip schema checking.
 - **Preload mechanism** — designed in A3's plan.
+- **Known issue, accepted for now: white navigation bar at the first frame on the POCO**
+  (Android 10, MIUI; A2 re-check 1, `docs/screenshots/a2-recheck/poco/01b-white-nav-bar-at-first-frame.png`).
+  The launch window is dark, but the system navigation bar turns white for ≈0.3–0.45 s as Flutter
+  draws its first frame, then dark again. The emulator (Android 14) is unaffected. Likely cause,
+  not confirmed on a device: nothing sets the navigation bar colour — neither the launch themes
+  nor the Dart code — so MIUI falls back to white when Flutter takes over. **Likely fix, if Ian
+  decides to:** (1) `<item name="android:navigationBarColor">@color/ohrwurm_bg</item>` in
+  `LaunchTheme` and `NormalTheme` in both `android/app/src/main/res/values/styles.xml` and
+  `values-night/styles.xml`; (2) before `runApp`, `SystemChrome.setSystemUIOverlayStyle` with
+  `systemNavigationBarColor` = DESIGN's `bg` and light navigation bar icons. Then a POCO-only
+  re-check of re-check 1 in a local session (force-stop, launch twice, screen-record the start).
 - Open since the start: displaying Mirror recording counts; colour-coding by article (on hold); iOS
   (later).
 
@@ -282,7 +297,7 @@ so. APP_SPEC and DESIGN remain the source of truth for behaviour; this is the lo
 
 - **POCO F1** (`cf47a954`): packs at `Download/ohrwurm-packs/` — fixtures `a1_k02`, `a1_k03`,
   `a1_nb01`, `notes`, stress pack `b2_k99`, and the real pack `a1_k01`. Installed: the app
-  (`io.github.adbrian.ohrwurm`, A2 debug build from `0a24dc6`, `Download/ohrwurm-packs` chosen)
+  (`io.github.adbrian.ohrwurm`, A2 debug build from `ab1ce08`, `Download/ohrwurm-packs` chosen)
   and the spike (`…ohrwurm.spike`, data cleared). Stay-awake is off.
 - **Emulator** `ohrwurm_api34` (API 34, KVM): has the fixtures and `b2_k99`, not `a1_k01`. The A2
   debug app is installed with `Download/ohrwurm-packs` chosen. Start with
