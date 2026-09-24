@@ -23,6 +23,26 @@ class PrefsRootFolderStore implements RootFolderStore {
   Future<void> save(String uri) => _prefs.setString(_key, uri);
 }
 
+/// The rejections the last rescan found, as [rejectionKey]s, kept between launches in
+/// `shared_preferences` (APP_SPEC 6). An automatic rescan shows the result screen for a rejection
+/// only the first time it's found, and the library can tell a rejected pack from a missing one
+/// before the launch rescan ends (STATUS, 2026-09-24).
+abstract class RejectionStore {
+  Future<Set<String>> load();
+  Future<void> save(Set<String> keys);
+}
+
+class PrefsRejectionStore implements RejectionStore {
+  static const _key = 'last_rejections';
+  final _prefs = SharedPreferencesAsync();
+
+  @override
+  Future<Set<String>> load() async => {...?await _prefs.getStringList(_key)};
+
+  @override
+  Future<void> save(Set<String> keys) => _prefs.setStringList(_key, keys.toList()..sort());
+}
+
 /// Which screen the library shows.
 enum LibraryView {
   /// Reading the saved folder at launch.
@@ -56,12 +76,14 @@ class LibraryController extends ChangeNotifier {
   final PackDao packDao;
   final Rescanner rescanner;
   final RootFolderStore folderStore;
+  final RejectionStore rejectionStore;
 
   LibraryController({
     required this.storage,
     required this.packDao,
     required this.rescanner,
     required this.folderStore,
+    required this.rejectionStore,
   });
 
   LibraryView _view = LibraryView.starting;
@@ -83,6 +105,14 @@ class LibraryController extends ChangeNotifier {
   RootAccess? _access;
   RootAccess? get access => _access;
 
+  /// The last rescan's rejections, as [rejectionKey]s.
+  Set<String> _rejections = const {};
+
+  /// Whether [pack] is unavailable because the last rescan rejected it (tag *Not loaded*),
+  /// rather than because its folder is gone (*Not found*).
+  bool wasRejected(Pack pack) =>
+      !pack.available && _rejections.any((k) => rejectedFolder(k) == pack.packId);
+
   bool _scanning = false;
   bool get scanning => _scanning;
 
@@ -100,6 +130,7 @@ class LibraryController extends ChangeNotifier {
       return;
     }
     _packs = await packDao.listPacks();
+    _rejections = await rejectionStore.load();
     _show(_packs.isEmpty ? LibraryView.firstScan : LibraryView.library);
     await _rescan(_root!, alwaysShowResult: false);
   }
@@ -151,7 +182,15 @@ class LibraryController extends ChangeNotifier {
           await _adopt(folder);
           _packs = await packDao.listPacks();
           _report = result;
-          _show(alwaysShowResult || result.changed ? LibraryView.result : LibraryView.library);
+          final rejections = result.rejections;
+          // A rejection counts as a change only the first time it's found (STATUS, 2026-09-24).
+          final newRejection = rejections.difference(_rejections).isNotEmpty;
+          if (!setEquals(rejections, _rejections)) {
+            _rejections = rejections;
+            await rejectionStore.save(rejections);
+          }
+          final show = alwaysShowResult || result.loadedOrLost || newRejection;
+          _show(show ? LibraryView.result : LibraryView.library);
       }
     } finally {
       _scanning = false;

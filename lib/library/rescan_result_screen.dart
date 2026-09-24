@@ -23,25 +23,32 @@ class RescanResultScreen extends StatelessWidget {
         : v.fine
             ? library.closeResult
             : library.rescan;
-    return AppPage(
-      leading: PlainIconButton(
-        icon: AppIcons.back,
-        tooltip: Copy.back,
-        onPressed: library.closeResult,
-      ),
-      children: [
-        const SizedBox(height: AppSpace.sm),
-        FolderTile(location: library.location ?? ''),
-        const SizedBox(height: AppSpace.lg),
-        for (final row in report.rows) ResultRow(row),
-        const SizedBox(height: AppSpace.lg),
-        VerdictPanel(
-          fine: v.fine,
-          message: v.message,
-          action: v.fine ? Copy.choosePacks : Copy.rescan,
-          onAction: action,
+    // The back arrow and the system back both go to the library (STATUS, 2026-09-24).
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) library.closeResult();
+      },
+      child: AppPage(
+        leading: PlainIconButton(
+          icon: AppIcons.back,
+          tooltip: Copy.back,
+          onPressed: library.closeResult,
         ),
-      ],
+        children: [
+          const SizedBox(height: AppSpace.sm),
+          FolderTile(location: library.location ?? ''),
+          const SizedBox(height: AppSpace.lg),
+          for (final row in report.rows) ResultRow(row),
+          const SizedBox(height: AppSpace.lg),
+          VerdictPanel(
+            fine: v.fine,
+            message: v.message,
+            action: v.fine ? Copy.choosePacks : Copy.rescan,
+            onAction: action,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -65,10 +72,7 @@ class ResultRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: StatusDisc(disc),
-          ),
+          Padding(padding: const EdgeInsets.only(top: 4), child: StatusDisc(disc)),
           const SizedBox(width: AppSpace.md),
           Expanded(
             child: Column(
@@ -76,9 +80,8 @@ class ResultRow extends StatelessWidget {
               children: [
                 Text(
                   rowName(row),
-                  style: AppText.german(15).copyWith(
-                    color: faint ? AppColors.neutral500 : AppColors.text,
-                  ),
+                  style: AppText.german(15)
+                      .copyWith(color: faint ? AppColors.neutral500 : AppColors.text),
                 ),
                 const SizedBox(height: 2),
                 Text(rowDetail(row), style: AppTextStyles.meta),

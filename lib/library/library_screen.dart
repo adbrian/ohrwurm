@@ -39,18 +39,20 @@ class LibraryScreen extends StatelessWidget {
         for (final pack in library.packs)
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpace.md),
-            child: PackCard(pack),
+            child: PackCard(pack, rejected: library.wasRejected(pack)),
           ),
       ],
     );
   }
 }
 
-/// One pack (DESIGN 4). An unavailable pack is still shown, in neutral-600, tagged *Not found*.
+/// One pack (DESIGN 4). An unavailable pack is still shown, in neutral-600, tagged *Not found*,
+/// or *Not loaded* when the last rescan rejected it.
 class PackCard extends StatelessWidget {
   final Pack pack;
+  final bool rejected;
 
-  const PackCard(this.pack, {super.key});
+  const PackCard(this.pack, {super.key, this.rejected = false});
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +88,7 @@ class PackCard extends StatelessWidget {
               ],
             ),
           ),
-          if (!available) const _Tag(Copy.notFound),
+          if (!available) _Tag(rejected ? Copy.notLoaded : Copy.notFound),
         ],
       ),
     );

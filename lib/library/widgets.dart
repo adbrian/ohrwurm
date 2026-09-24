@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
 
-/// Stand-ins for DESIGN's Phosphor icons until Ian approves `phosphor_flutter` (STATUS, open
-/// points).
+/// Stand-ins for DESIGN's Phosphor icons. Phosphor is approved, but `phosphor_flutter` 2.1.0
+/// doesn't compile on Flutter 3.47; how to bring it in is still open (STATUS, 2026-09-24).
 abstract final class AppIcons {
   static const headphones = Icons.headphones_outlined;
   static const folder = Icons.folder_outlined;

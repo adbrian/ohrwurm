@@ -18,12 +18,14 @@ void main() {
   late Directory root;
   late DirectoryPackStorage storage;
   late MemoryFolderStore store;
+  late MemoryRejectionStore rejections;
 
   setUp(() async {
     database = await openTestDatabase(FakeClock());
     root = copyFixturePacks();
     storage = DirectoryPackStorage();
     store = MemoryFolderStore();
+    rejections = MemoryRejectionStore();
   });
 
   tearDown(() async {
@@ -41,6 +43,7 @@ void main() {
           check: check ?? checkManifestInIsolate,
         ),
         folderStore: store,
+        rejectionStore: rejections,
       );
 
   List<String> ids(LibraryController c) => [for (final p in c.packs) p.packId];
@@ -132,6 +135,114 @@ void main() {
     // Still listed, unavailable.
     expect(ids(c), ['a1_k02', 'a1_nb01']);
     expect(c.packs.last.available, isFalse);
+  });
+
+  group('a rejection shows the result only the first time it is found', () {
+    const k03Clip = 'a1_k03__die_stadt__ex1_src.ogg';
+
+    test('still broken at the next launch: the library stays', () async {
+      store.uri = root.path;
+      final first = controller();
+      await first.start();
+      expect(first.view, LibraryView.result);
+      expect(rejections.keys, {'a1_k03/clips-missing 1'});
+
+      final next = controller();
+      await next.start();
+      expect(next.view, LibraryView.library);
+      expect(next.report!.count(RescanOutcome.rejected), 1);
+    });
+
+    test('Rescan still shows it', () async {
+      store.uri = root.path;
+      await controller().start();
+      final c = controller();
+      await c.start();
+      expect(c.view, LibraryView.library);
+
+      await c.rescan();
+      expect(c.view, LibraryView.result);
+      expect(c.report!.count(RescanOutcome.rejected), 1);
+    });
+
+    test('rejected for a different reason: shown again', () async {
+      store.uri = root.path;
+      await controller().start();
+      final k03 = Directory(p.join(root.path, 'a1_k03'));
+      final another = k03
+          .listSync()
+          .whereType<File>()
+          .firstWhere((f) => f.path.endsWith('.ogg'));
+      another.deleteSync();
+
+      final c = controller();
+      await c.start();
+      expect(c.view, LibraryView.result);
+      expect(rejections.keys, {'a1_k03/clips-missing 2'});
+    });
+
+    test('fixed, then broken again: shown again', () async {
+      store.uri = root.path;
+      await controller().start();
+      // Only clip names are checked, so an empty file stands in for the missing clip.
+      final clip = File(p.join(root.path, 'a1_k03', k03Clip))..createSync();
+      await controller().start();
+      expect(rejections.keys, isEmpty);
+
+      clip.deleteSync();
+      final c = controller();
+      await c.start();
+      expect(c.view, LibraryView.result);
+    });
+
+    test('a known pack rejected is remembered as rejected at the next launch', () async {
+      Directory(p.join(root.path, 'a1_k03')).deleteSync(recursive: true);
+      store.uri = root.path;
+      await controller().start();
+      File(p.join(root.path, 'a1_nb01', 'manifest.json')).writeAsStringSync('{');
+      final first = controller();
+      await first.start();
+      expect(first.view, LibraryView.result);
+      expect(first.wasRejected(first.packs.last), isTrue);
+
+      // Before the launch rescan ends, the library already knows it was rejected.
+      final gate = Completer<void>();
+      final next = controller(check: ({
+        required schemaJson,
+        required folderName,
+        required manifestText,
+        required clipNames,
+      }) async {
+        await gate.future;
+        return checkManifest(
+          schemaJson: schemaJson,
+          folderName: folderName,
+          manifestText: manifestText,
+          clipNames: clipNames,
+        );
+      });
+      final started = next.start();
+      await pumpEventQueue();
+      expect(next.scanning, isTrue);
+      final nb01 = next.packs.singleWhere((p) => p.packId == 'a1_nb01');
+      expect(next.wasRejected(nb01), isTrue);
+      expect(next.wasRejected(next.packs.first), isFalse);
+
+      gate.complete();
+      await started;
+      expect(next.view, LibraryView.library);
+    });
+
+    test('a missing pack is not taken for a rejected one', () async {
+      Directory(p.join(root.path, 'a1_k03')).deleteSync(recursive: true);
+      store.uri = root.path;
+      await controller().start();
+      Directory(p.join(root.path, 'a1_nb01')).deleteSync(recursive: true);
+      final c = controller();
+      await c.start();
+      expect(c.wasRejected(c.packs.last), isFalse);
+      expect(c.packs.last.available, isFalse);
+    });
   });
 
   test('a saved folder with nothing loaded yet shows the first scan, not an empty library',

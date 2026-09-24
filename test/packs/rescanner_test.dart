@@ -110,6 +110,18 @@ void main() {
     final report = await rescan();
     expect(row(report, 'a1_k03').outcome, RescanOutcome.rejected);
     expect(report.changed, isTrue);
+    expect(report.loadedOrLost, isFalse);
+    expect(report.rejections, {'a1_k03/clips-missing 1'});
+  });
+
+  test('rejection keys name the folder and the reason as reported', () {
+    expect(rejectionKey('a1_k03', const ClipsMissing(['a', 'b'])), 'a1_k03/clips-missing 2');
+    expect(rejectionKey('x', const ManifestUnreadable()), 'x/manifest-unreadable');
+    expect(rejectionKey('x', const SchemaInvalid(['e'])), 'x/schema-invalid');
+    expect(rejectionKey('x', const FolderMismatch('a1_k05')), 'x/folder-mismatch a1_k05');
+    expect(rejectionKey('x', const UnplayableAudio('mp3')), 'x/unplayable-audio mp3');
+    expect(rejectionKey('x', const SaveFailed()), 'x/save-failed');
+    expect(rejectedFolder(rejectionKey('a1_k03', const SaveFailed())), 'a1_k03');
   });
 
   test('updating a pack replaces its cards and keeps progress', () async {
@@ -279,6 +291,11 @@ void main() {
     await rescan();
     expect(lines, hasLength(5));
     expect(lines.where((l) => l.startsWith('ohrwurm.rescan a1_k03 ')), hasLength(1));
+    // Each folder's line is split by phase.
+    final phase = r'\d+ ms \(list \d+, read \d+, check \d+';
+    expect(lines, contains(matches(RegExp('^ohrwurm\\.rescan a1_k02 $phase, save \\d+\\): added\$'))));
+    expect(lines, contains(matches(RegExp('^ohrwurm\\.rescan a1_k03 $phase\\): rejected\$'))));
+    expect(lines, contains(matches(RegExp(r'^ohrwurm\.rescan notes \d+ ms \(list \d+\): skipped$'))));
     expect(lines.last, matches(RegExp(r'^ohrwurm\.rescan total \d+ ms: RescanReport$')));
   });
 

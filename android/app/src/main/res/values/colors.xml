@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- DESIGN's `bg` token (lib/theme/tokens.dart), so the launch window is the app's own
+         background and there is no white frame before Flutter draws (STATUS, 2026-09-24). -->
+    <color name="ohrwurm_bg">#FF0E0E13</color>
+</resources>

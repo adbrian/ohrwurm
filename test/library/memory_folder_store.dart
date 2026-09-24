@@ -12,3 +12,14 @@ class MemoryFolderStore implements RootFolderStore {
   @override
   Future<void> save(String uri) async => this.uri = uri;
 }
+
+/// A [RejectionStore] in memory, in place of `shared_preferences`.
+class MemoryRejectionStore implements RejectionStore {
+  Set<String> keys = {};
+
+  @override
+  Future<Set<String>> load() async => {...keys};
+
+  @override
+  Future<void> save(Set<String> keys) async => this.keys = {...keys};
+}

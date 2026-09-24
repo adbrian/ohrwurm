@@ -26,6 +26,7 @@ void main() {
       packDao: database.packs,
       rescanner: Rescanner(storage: storage, packs: database.packs, schemaJson: schemaJson),
       folderStore: MemoryFolderStore(),
+      rejectionStore: MemoryRejectionStore(),
     );
     await tester.runAsync(library.start);
     await tester.pumpWidget(

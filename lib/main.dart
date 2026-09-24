@@ -29,6 +29,7 @@ Future<void> main() async {
       log: kDebugMode ? debugPrint : null,
     ),
     folderStore: PrefsRootFolderStore(),
+    rejectionStore: PrefsRejectionStore(),
   );
   runApp(MultiProvider(
     providers: [

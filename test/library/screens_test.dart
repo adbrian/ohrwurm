@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ohrwurm/data/app_database.dart';
+import 'package:ohrwurm/data/models.dart';
 import 'package:ohrwurm/library/copy.dart';
 import 'package:ohrwurm/library/home.dart';
 import 'package:ohrwurm/library/library_controller.dart';
@@ -34,6 +35,7 @@ void main() {
       packDao: database.packs,
       rescanner: Rescanner(storage: storage, packs: database.packs, schemaJson: schemaJson),
       folderStore: store,
+      rejectionStore: MemoryRejectionStore(),
     );
   });
 
@@ -75,11 +77,12 @@ void main() {
 
     expect(find.text(root.path), findsOneWidget);
     expect(find.text('Freunde, Kollegen und ich'), findsOneWidget);
-    expect(find.text('added · 4 words'), findsOneWidget);
+    // A titled pack's label leads the detail line (APP_SPEC 4.3).
+    expect(find.text('A1 · Chapter 2 · added · 4 words'), findsOneWidget);
     expect(find.text('A1 · Notebook 1'), findsOneWidget);
     expect(find.text('added · 6 words'), findsOneWidget);
     expect(find.text('In der Stadt'), findsOneWidget);
-    expect(find.text('not loaded · 1 audio file missing'), findsOneWidget);
+    expect(find.text('A1 · Chapter 3 · not loaded · 1 audio file missing'), findsOneWidget);
     expect(find.text('notes'), findsOneWidget);
     expect(find.text('no manifest · skipped'), findsOneWidget);
     expect(find.text("One pack wasn't loaded. The rest are ready."), findsOneWidget);
@@ -107,6 +110,32 @@ void main() {
     expect(find.text('In der Stadt'), findsNothing);
   });
 
+  testWidgets('a known pack rejected on rescan is tagged Not loaded, not Not found',
+      (tester) async {
+    store.uri = root.path;
+    await run(tester, library.start);
+    File(p.join(root.path, 'a1_nb01', 'manifest.json')).writeAsStringSync('{');
+    await run(tester, library.rescan);
+    library.closeResult();
+    await show(tester);
+
+    expect(find.text(Copy.notLoaded), findsOneWidget);
+    expect(find.text(Copy.notFound), findsNothing);
+    expect(tester.widget<Text>(find.text('A1 · Notebook 1')).style!.color, AppColors.neutral600);
+  });
+
+  testWidgets('system back on the result screen goes to the library', (tester) async {
+    store.uri = root.path;
+    await run(tester, library.start);
+    await show(tester);
+    expect(library.view, LibraryView.result);
+
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    expect(library.view, LibraryView.library);
+    expect(find.text(Copy.libraryHeading), findsOneWidget);
+  });
+
   testWidgets('a lost folder offers Try again and never an empty library', (tester) async {
     store.uri = p.join(root.path, 'moved');
     await run(tester, library.start);
@@ -130,6 +159,24 @@ void main() {
   });
 
   group('wording', () {
+    const titled = PackInput(
+      packId: 'a1_k03',
+      level: 'a1',
+      kind: 'textbook',
+      number: 3,
+      title: 'In der Stadt',
+      audioFormat: 'opus',
+      generatedAt: '2026-09-01T00:00:00Z',
+    );
+    const untitled = PackInput(
+      packId: 'a1_nb01',
+      level: 'a1',
+      kind: 'notebook',
+      number: 1,
+      audioFormat: 'opus',
+      generatedAt: '2026-09-01T00:00:00Z',
+    );
+
     RescanRow rejected(Rejection why, {bool known = false}) => RescanRow(
           folderName: 'a1_k02',
           outcome: RescanOutcome.rejected,
@@ -152,8 +199,39 @@ void main() {
           "not loaded · manifest couldn't be read · progress kept");
       expect(
         rowDetail(const RescanRow(
+          folderName: 'a1_k03',
+          outcome: RescanOutcome.rejected,
+          pack: titled,
+          rejection: ClipsMissing(['a']),
+          known: true,
+        )),
+        'A1 · Chapter 3 · not loaded · 1 audio file missing · progress kept',
+      );
+      expect(
+        rowDetail(const RescanRow(
           folderName: 'a1_nb01',
           outcome: RescanOutcome.notFound,
+          known: true,
+        )),
+        'not found · progress kept',
+      );
+    });
+
+    test('a titled pack leads with its label; an untitled one does not repeat it', () {
+      expect(
+        rowDetail(const RescanRow(
+          folderName: 'a1_k03',
+          outcome: RescanOutcome.updated,
+          pack: titled,
+          cardCount: 3,
+        )),
+        'A1 · Chapter 3 · updated · 3 words',
+      );
+      expect(
+        rowDetail(const RescanRow(
+          folderName: 'a1_nb01',
+          outcome: RescanOutcome.notFound,
+          pack: untitled,
           known: true,
         )),
         'not found · progress kept',

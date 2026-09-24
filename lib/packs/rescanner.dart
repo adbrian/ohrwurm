@@ -78,16 +78,44 @@ class RescanReport extends RescanResult {
 
   const RescanReport(this.rows, {this.newlyUnavailable = const {}});
 
-  /// Whether anything was added, updated or rejected, or a pack went missing: the cases that
-  /// show the result screen after an automatic rescan (STATUS, 2026-09-24).
-  bool get changed => rows.any((r) => switch (r.outcome) {
-        RescanOutcome.added || RescanOutcome.updated || RescanOutcome.rejected => true,
+  /// Whether anything was added, updated or rejected, or a pack went missing.
+  bool get changed => loadedOrLost || rows.any((r) => r.outcome == RescanOutcome.rejected);
+
+  /// Whether anything was added or updated, or a pack went missing. With a rejection seen for
+  /// the first time, these are the cases that show the result screen after an automatic rescan
+  /// (STATUS, 2026-09-24).
+  bool get loadedOrLost => rows.any((r) => switch (r.outcome) {
+        RescanOutcome.added || RescanOutcome.updated => true,
         RescanOutcome.notFound => newlyUnavailable.contains(r.folderName),
-        RescanOutcome.unchanged || RescanOutcome.skipped => false,
+        RescanOutcome.unchanged || RescanOutcome.rejected || RescanOutcome.skipped => false,
       });
+
+  /// Each rejection as a [rejectionKey], to tell a new rejection from one already reported.
+  Set<String> get rejections => {
+        for (final r in rows)
+          if (r.outcome == RescanOutcome.rejected) rejectionKey(r.folderName, r.rejection!),
+      };
 
   int count(RescanOutcome outcome) => rows.where((r) => r.outcome == outcome).length;
 }
+
+/// A rejection's identity: the folder, and the reason as the result screen reports it. The same
+/// pack rejected for a different reason (or a different number of missing clips) is a new
+/// rejection. Folder names can't contain `/`, so [rejectedFolder] can split it again.
+String rejectionKey(String folderName, Rejection why) {
+  final reason = switch (why) {
+    ClipsMissing(:final missing) => 'clips-missing ${missing.length}',
+    ManifestUnreadable() => 'manifest-unreadable',
+    SchemaInvalid() => 'schema-invalid',
+    FolderMismatch(:final packId) => 'folder-mismatch $packId',
+    UnplayableAudio(:final format) => 'unplayable-audio $format',
+    SaveFailed() => 'save-failed',
+  };
+  return '$folderName/$reason';
+}
+
+/// The folder name in a [rejectionKey].
+String rejectedFolder(String key) => key.substring(0, key.indexOf('/'));
 
 /// Runs the checks of APP_SPEC 5.2 step 2 on one folder. Replaceable in tests.
 typedef ManifestChecker = Future<ManifestCheck> Function({
@@ -121,8 +149,8 @@ class Rescanner {
   final String schemaJson;
   final ManifestChecker check;
 
-  /// Receives timing lines: one per folder and one for the whole rescan. Debug builds pass
-  /// `debugPrint`, to measure rescans on a device.
+  /// Receives timing lines: one per folder, split by phase (list, read, check, save), and one
+  /// for the whole rescan. Debug builds pass `debugPrint`, to measure rescans on a device.
   final void Function(String line)? log;
 
   Rescanner({
@@ -160,8 +188,9 @@ class Rescanner {
 
     for (final folder in entries.where((e) => e.isDir)) {
       final clock = Stopwatch()..start();
-      final row = await _scanFolder(folder, known[folder.name]);
-      log?.call('ohrwurm.rescan ${folder.name} ${clock.elapsedMilliseconds} ms: '
+      final phases = _Phases();
+      final row = await _scanFolder(folder, known[folder.name], phases);
+      log?.call('ohrwurm.rescan ${folder.name} ${clock.elapsedMilliseconds} ms ($phases): '
           '${row?.outcome.name ?? 'notFound'}');
       if (row == null) continue;
       rows.add(row);
@@ -189,7 +218,7 @@ class Rescanner {
 
   /// Checks one subfolder and reconciles it. A known pack's folder without a manifest returns
   /// null: it's reported once, as not found, rather than also as skipped.
-  Future<RescanRow?> _scanFolder(StorageEntry folder, Pack? knownPack) async {
+  Future<RescanRow?> _scanFolder(StorageEntry folder, Pack? knownPack, _Phases phases) async {
     final name = folder.name;
     RescanRow rejected(Rejection why, {PackInput? pack}) => RescanRow(
           folderName: name,
@@ -201,7 +230,7 @@ class Rescanner {
 
     final List<StorageEntry> files;
     try {
-      files = await storage.list(folder.uri);
+      files = await phases.time('list', () => storage.list(folder.uri));
     } catch (_) {
       return rejected(const ManifestUnreadable());
     }
@@ -213,12 +242,15 @@ class Rescanner {
 
     final ManifestCheck result;
     try {
-      final text = await storage.readText(manifestFile.uri);
-      result = await check(
-        schemaJson: schemaJson,
-        folderName: name,
-        manifestText: text,
-        clipNames: {for (final f in files) if (!f.isDir) f.name},
+      final text = await phases.time('read', () => storage.readText(manifestFile.uri));
+      result = await phases.time(
+        'check',
+        () => check(
+          schemaJson: schemaJson,
+          folderName: name,
+          manifestText: text,
+          clipNames: {for (final f in files) if (!f.isDir) f.name},
+        ),
       );
     } catch (_) {
       return rejected(const ManifestUnreadable());
@@ -245,7 +277,7 @@ class Rescanner {
     }
 
     try {
-      await packs.replacePack(pack, manifest.cards);
+      await phases.time('save', () => packs.replacePack(pack, manifest.cards));
     } catch (_) {
       return rejected(const SaveFailed(), pack: pack);
     }
@@ -259,6 +291,23 @@ class Rescanner {
   }
 
   static PackInput? _input(Pack? p) => p == null ? null : packInputOf(p);
+}
+
+/// How long each phase of one folder's scan took, for the timing log: `list 12, read 3, …`.
+class _Phases {
+  final _ms = <String, int>{};
+
+  Future<T> time<T>(String phase, Future<T> Function() work) async {
+    final clock = Stopwatch()..start();
+    try {
+      return await work();
+    } finally {
+      _ms[phase] = clock.elapsedMilliseconds;
+    }
+  }
+
+  @override
+  String toString() => [for (final e in _ms.entries) '${e.key} ${e.value}'].join(', ');
 }
 
 /// APP_SPEC 4.3: level, then textbook before notebook, then number. Rows without a pack

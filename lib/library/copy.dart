@@ -1,5 +1,5 @@
-/// Wording for the A2 screens. Where DESIGN gives the words they're used as written; the rest is
-/// proposed in DESIGN's voice, describing failures by what was protected, for Ian's review
+/// Wording for the A2 screens. Where DESIGN gives the words they're used as written; the rest was
+/// proposed in DESIGN's voice, describing failures by what was protected, and approved by Ian
 /// (STATUS, 2026-09-24).
 library;
 
@@ -10,8 +10,11 @@ import '../packs/rescanner.dart';
 /// `One` for 1, else the digits: *One pack wasn't loaded*, *2 packs ready*.
 String _count(int n, String noun) => n == 1 ? 'One $noun' : '$n ${noun}s';
 
-/// The detail line of a rescan row (DESIGN 2).
+/// The detail line of a rescan row (DESIGN 2). A titled pack's label comes first, as in the
+/// library's meta line: the title is the row's name, with *A1 · Chapter 1* beneath (APP_SPEC 4.3).
 String rowDetail(RescanRow row) {
+  final pack = row.pack;
+  final label = pack?.title == null ? null : packLabel(pack!.level, pack.kind, pack.number);
   final detail = switch (row.outcome) {
     RescanOutcome.added => 'added · ${wordCount(row.cardCount!)}',
     RescanOutcome.updated => 'updated · ${wordCount(row.cardCount!)}',
@@ -22,7 +25,7 @@ String rowDetail(RescanRow row) {
   };
   final kept = row.known &&
       (row.outcome == RescanOutcome.rejected || row.outcome == RescanOutcome.notFound);
-  return kept ? '$detail · progress kept' : detail;
+  return [?label, detail, if (kept) 'progress kept'].join(' · ');
 }
 
 String rejectionReason(Rejection why) => switch (why) {
@@ -81,6 +84,7 @@ abstract final class Copy {
   // Library (DESIGN 4, read-only).
   static const libraryHeading = 'Your packs';
   static const notFound = 'Not found';
+  static const notLoaded = 'Not loaded';
   static const checking = 'Checking the folder…';
   static const emptyLibrary = 'No packs in this folder yet. Copy your pack folders into it, '
       'then rescan.';
