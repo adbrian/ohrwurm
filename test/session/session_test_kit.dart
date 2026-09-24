@@ -12,6 +12,7 @@ import 'package:ohrwurm/session/deck_builder.dart';
 import 'package:ohrwurm/session/launch.dart';
 import 'package:ohrwurm/session/session_cards.dart';
 import 'package:ohrwurm/session/sessions.dart';
+import 'package:ohrwurm/session/setup_controller.dart';
 import 'package:ohrwurm/settings/settings.dart';
 import 'package:ohrwurm/theme/app_theme.dart';
 import 'package:provider/provider.dart';
@@ -58,6 +59,11 @@ class SessionKit {
   final Sessions sessions;
   final AppSettings settings = AppSettings(MemorySettingsStore());
   final host = FakeAudioHost();
+  late final SetupController setup = SetupController(
+    library: library,
+    deck: DeckBuilder(cards: db.cards, progress: db.progress),
+    progress: db.progress,
+  );
   final players = <FakeClipPlayer>[];
   int disposedPlayers = 0;
 
@@ -107,6 +113,7 @@ class SessionKit {
       ChangeNotifierProvider<LibraryController>.value(value: library),
       ChangeNotifierProvider<AppSettings>.value(value: settings),
       Provider<Sessions>.value(value: sessions),
+      ChangeNotifierProvider<SetupController>.value(value: setup),
       Provider<AudioHost>.value(value: host),
       Provider<PlayerFactory>.value(
         value: (speed) {

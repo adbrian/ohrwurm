@@ -14,6 +14,7 @@ import 'session/deck_builder.dart';
 import 'session/launch.dart';
 import 'session/session_cards.dart';
 import 'session/sessions.dart';
+import 'session/setup_controller.dart';
 import 'settings/settings.dart';
 import 'theme/app_theme.dart';
 
@@ -45,6 +46,11 @@ Future<void> main() async {
     deck: DeckBuilder(cards: database.cards, progress: database.progress),
     clips: StorageClipResolver(storage: storage, root: () => library.root),
   );
+  final setup = SetupController(
+    library: library,
+    deck: DeckBuilder(cards: database.cards, progress: database.progress),
+    progress: database.progress,
+  )..offerResume(await sessions.saved());
   runApp(
     MultiProvider(
       providers: [
@@ -52,6 +58,7 @@ Future<void> main() async {
         ChangeNotifierProvider<LibraryController>.value(value: library),
         ChangeNotifierProvider<AppSettings>.value(value: settings),
         Provider<Sessions>.value(value: sessions),
+        ChangeNotifierProvider<SetupController>.value(value: setup),
         Provider<AudioHost>.value(value: PlatformAudioHost()),
         Provider<PlayerFactory>.value(value: (speed) => JustAudioClipPlayer()..speed = speed),
         Provider<PlayerDisposer>.value(

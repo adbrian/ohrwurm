@@ -9,6 +9,8 @@ import 'package:ohrwurm/library/home.dart';
 import 'package:ohrwurm/library/library_controller.dart';
 import 'package:ohrwurm/packs/manifest.dart';
 import 'package:ohrwurm/packs/rescanner.dart';
+import 'package:ohrwurm/session/deck_builder.dart';
+import 'package:ohrwurm/session/setup_controller.dart';
 import 'package:ohrwurm/theme/app_theme.dart';
 import 'package:ohrwurm/theme/tokens.dart';
 import 'package:path/path.dart' as p;
@@ -46,8 +48,17 @@ void main() {
 
   Future<void> show(WidgetTester tester) async {
     await tester.pumpWidget(
-      ChangeNotifierProvider.value(
-        value: library,
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: library),
+          ChangeNotifierProvider(
+            create: (_) => SetupController(
+              library: library,
+              deck: DeckBuilder(cards: database.cards, progress: database.progress),
+              progress: database.progress,
+            ),
+          ),
+        ],
         child: MaterialApp(theme: buildAppTheme(), home: const HomeScreen()),
       ),
     );

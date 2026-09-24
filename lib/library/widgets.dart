@@ -12,6 +12,14 @@ abstract final class AppIcons {
   static const folder = IconData(0xe24a, fontFamily: _family);
   static const back = IconData(0xe058, fontFamily: _family); // arrow-left
   static const rescan = IconData(0xe036, fontFamily: _family); // arrow-clockwise
+  static const settings = IconData(0xe270, fontFamily: _family); // gear
+  static const check = IconData(0xe182, fontFamily: _family);
+  static const minus = IconData(0xe32a, fontFamily: _family);
+  static const plus = IconData(0xe3d4, fontFamily: _family);
+  static const play = IconData(0xe3d0, fontFamily: _family);
+  static const record = IconData(0xe326, fontFamily: _family); // microphone
+  static const stop = IconData(0xe46c, fontFamily: _family);
+  static const playMine = IconData(0xeca8, fontFamily: _family); // user-sound
 }
 
 abstract final class AppTextStyles {
