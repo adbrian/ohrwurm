@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +25,8 @@ Future<void> main() async {
       storage: storage,
       packs: database.packs,
       schemaJson: await rootBundle.loadString(schemaAsset),
+      // Rescan timings, read on a device with `adb logcat | grep ohrwurm.rescan`.
+      log: kDebugMode ? debugPrint : null,
     ),
     folderStore: PrefsRootFolderStore(),
   );

@@ -10,12 +10,13 @@ API 34 emulator, first launch → *Choose folder* → `Download/ohrwurm-packs`; 
 screen (`a1_k01`, `a1_k02`, `a1_nb01`, `b2_k99` added; `a1_k03` *not loaded · 1 audio file
 missing*; `notes` skipped), relaunch (library appears at once, no result screen unless something
 changed), picking a pack folder as the root, stale access (rename the folder, relaunch, *Try
-again*), and **rescan timings** for `a1_k01` and the 1,500-clip `b2_k99`. Then Ian reviews the
+again*), and **rescan timings** for `a1_k01` and the 1,500-clip `b2_k99` (debug builds log them:
+`adb logcat | grep ohrwurm.rescan`, one line per folder and a total). Then Ian reviews the
 wording and the open points below, and A2 is reported done.
 
 ## A2 progress
 
-`flutter analyze` clean; `flutter test` 116 passing (Flutter 3.47.2, as in `.metadata`).
+`flutter analyze` clean; `flutter test` 117 passing (Flutter 3.47.2, as in `.metadata`).
 
 **Built:**
 - `lib/packs/`: `PackStorage` + `SafPackStorage` (SAF, tree URI stored); `manifest.dart`
@@ -110,7 +111,8 @@ so. APP_SPEC and DESIGN remain the source of truth for behaviour; this is the lo
 | 2026-09-24 | **Rescan never blocks the library**: show the library from the database immediately, rescan in the background, update when done | Ian's addition; reason not stated |
 | 2026-09-24 | Wording not in DESIGN (stale access, *Try again*, "looks like one pack", rejection reasons): Claude proposes it in DESIGN's voice, **describing failures by what was protected**; Ian reviews | Reason not stated; DESIGN's Copy section already asks for failures described by what was protected |
 | 2026-09-24 | Push A2 work in progress and continue it in a cloud session | Ian's choice; reason not stated |
-| 2026-09-24 | Continue A2 in a cloud session on branch `a2`; device tests only when needed, in a local session | Ian's instruction |
+| 2026-09-24 | Continue A2 in a cloud session on branch `a2` | Ian's instruction |
+| 2026-09-24 | **Local sessions only for what needs Ian's machine** (devices, emulator, adb). Everything else — code changes, fixes, analyze and tests, docs — in a cloud session. A local session records device results in STATUS, commits and pushes; it doesn't fix failures | Ian's instruction |
 | 2026-09-24 | Don't commit `a1_k01`'s audio. **Commit its manifest** as `test/fixtures/real/a1_k01_manifest.json`, marked as a pipeline snapshot, with a validator test that it passes | Cross-repo check that the app's and pipeline's schema copies still agree; the audio is 21 MB |
 
 ## Pending

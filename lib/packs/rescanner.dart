@@ -121,16 +121,28 @@ class Rescanner {
   final String schemaJson;
   final ManifestChecker check;
 
+  /// Receives timing lines: one per folder and one for the whole rescan. Debug builds pass
+  /// `debugPrint`, to measure rescans on a device.
+  final void Function(String line)? log;
+
   Rescanner({
     required this.storage,
     required this.packs,
     required this.schemaJson,
     this.check = checkManifestInIsolate,
+    this.log,
   });
 
   static const manifestName = 'manifest.json';
 
   Future<RescanResult> rescan(String root) async {
+    final total = Stopwatch()..start();
+    final result = await _rescan(root);
+    log?.call('ohrwurm.rescan total ${total.elapsedMilliseconds} ms: ${result.runtimeType}');
+    return result;
+  }
+
+  Future<RescanResult> _rescan(String root) async {
     final access = await storage.checkRoot(root);
     if (access != RootAccess.ok) return RootUnavailable(access);
 
@@ -147,7 +159,10 @@ class Rescanner {
     final rows = <RescanRow>[];
 
     for (final folder in entries.where((e) => e.isDir)) {
+      final clock = Stopwatch()..start();
       final row = await _scanFolder(folder, known[folder.name]);
+      log?.call('ohrwurm.rescan ${folder.name} ${clock.elapsedMilliseconds} ms: '
+          '${row?.outcome.name ?? 'notFound'}');
       if (row == null) continue;
       rows.add(row);
       if (row.outcome != RescanOutcome.rejected) found.add(folder.name);

@@ -268,6 +268,20 @@ void main() {
     expect(await database.packs.listPacks(), isEmpty);
   });
 
+  test('logs a timing line per folder and one for the whole rescan', () async {
+    final lines = <String>[];
+    rescanner = Rescanner(
+      storage: storage,
+      packs: database.packs,
+      schemaJson: schemaJson,
+      log: lines.add,
+    );
+    await rescan();
+    expect(lines, hasLength(5));
+    expect(lines.where((l) => l.startsWith('ohrwurm.rescan a1_k03 ')), hasLength(1));
+    expect(lines.last, matches(RegExp(r'^ohrwurm\.rescan total \d+ ms: RescanReport$')));
+  });
+
   test('an empty root reports nothing', () async {
     final empty = Directory(p.join(root.path, 'notes'));
     final report = (await rescanner.rescan(empty.path)) as RescanReport;
