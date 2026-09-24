@@ -1,17 +1,36 @@
 # Status
 
 A0 and A1 complete. **A2 built and tested on desktop, and on both devices (2026-09-24)**: every
-device check passed on the POCO and the emulator (branch `a2`). Not yet reported done: Ian reviews
-the wording, the open points and the device findings first.
+device check passed on the POCO and the emulator (branch `a2`). Ian reviewed the device findings
+and open points the same day; a cloud session made the changes he decided (Decisions, below). Not
+yet reported done: the changes need the local device re-check under Next step first.
 
 ## Next step
 
-1. **Ian reviews** the proposed wording and open points (A2 progress, below), the device findings
-   (A2 device results, below) and the screenshots in `docs/screenshots/a2/`.
-2. **A cloud session** makes whatever changes Ian decides, with `flutter analyze` and
-   `flutter test`. Any change to screens or rescan needs a short device re-check in a local
-   session.
-3. Then A2 is reported done.
+**A local session re-checks A2 on the devices**, then A2 is reported done. Don't start A3.
+
+Build a debug APK from the head of `a2` and install it **over** the current A2 build on the POCO and
+the emulator (keep the data: the saved folder and the database stay). The folder stays
+`Download/ohrwurm-packs` throughout. Record the results in a new "A2 re-check" section here; don't
+fix failures in the local session. Fixture files to put back are in `test/fixtures/packs/`.
+
+| # | Re-check (decision) | Do | Should appear |
+|---|---|---|---|
+| 1 | Launch window (finding 1) | Force-stop the app, then tap its launcher icon. Do it twice on each device | Dark (`#0E0E13`) from the first frame to the app. **No white frame at all**, then the library. Screenshot or `adb shell screenrecord` the start |
+| 2 | First launch after the install (finding 2) | Let the launch rescan finish | The result screen once: the install starts with no remembered rejections, so `a1_k03` counts as new |
+| 3 | Result rows (finding 3) | Look at that result screen | Titled packs have the label first in the detail line: *Guten Tag!* / *A1 · Chapter 1 · unchanged* (POCO only), *Freunde, Kollegen und ich* / *A1 · Chapter 2 · unchanged*, *In der Stadt* / *A1 · Chapter 3 · not loaded · 1 audio file missing*, *Stress test* / *B2 · Chapter 99 · unchanged*. Untitled: *A1 · Notebook 1* / *unchanged*. *notes* / *no manifest · skipped* |
+| 4 | Icons (open point 1) | On the result screen and the library, look at the back arrow, the folder tile and the rescan button | Thin stroked Phosphor icons (arrow left, folder, circular arrow), not Material ones, and **not empty boxes** (a missing font shows as boxes or nothing). The headphone tile on first launch is checked in 11 |
+| 5 | System back (open point 4) | On the result screen, use the system back (gesture or button) | The library (*Your packs*). The app doesn't close |
+| 6 | Rejection not repeated (finding 2) | Force-stop, relaunch. Wait for *Checking the folder…* to end | The library stays. The result screen **does not** come back, although `a1_k03` is still broken |
+| 7 | Rescan still shows it (finding 2) | Tap the rescan button in the library | The result screen, with the `a1_k03` row and *One pack wasn't loaded. Nothing else changed.* Back to the library |
+| 8 | New reason is news (finding 2) | `adb shell rm` a second clip from `/sdcard/Download/ohrwurm-packs/a1_k03/` (any `.ogg`), then force-stop and relaunch | The result screen returns: *In der Stadt* / *A1 · Chapter 3 · not loaded · 2 audio files missing*. Put that clip back afterwards (`adb push` from `test/fixtures/packs/a1_k03/`) and relaunch: the result shows once more (*1 audio file missing* again) |
+| 9 | *Not loaded* tag (open point 2) | `adb shell rm /sdcard/Download/ohrwurm-packs/a1_nb01/a1_nb01__der_freund__translation.ogg`, force-stop, relaunch | Result screen: *A1 · Notebook 1* / *not loaded · 1 audio file missing · progress kept*, ringed disc; verdict *2 packs weren't loaded. Nothing else changed.* Back: the *A1 · Notebook 1* card is dimmed and tagged **Not loaded** (not *Not found*) |
+| 10 | Tag remembered (open point 2) | Force-stop, relaunch; look at the card while *Checking the folder…* shows | *Not loaded* from the first frame, not *Not found* changing to *Not loaded*. The library stays. Then `adb push` the clip back from `test/fixtures/packs/a1_nb01/` and relaunch: the card is available again, no tag |
+| 11 | Headphone icon (open point 1) | Emulator only, last: clear the app's storage (Settings → Apps → Ohrwurm → Storage → Clear), launch; then *Choose folder* → `Download/ohrwurm-packs` | First launch: the headphone icon in its accent-outlined tile, drawn as a Phosphor stroke (not a box). Choosing the folder gives the result screen with everything *added*, then the library as before |
+| 12 | Phase timings (finding 4) | `adb logcat \| grep ohrwurm.rescan` during a relaunch on each device, and one **Rescan** | Per-folder lines like `ohrwurm.rescan a1_k01 817 ms (list …, read …, check …): unchanged` (`save …` too for added or updated packs). Record the list / read / check split for `a1_k01` (POCO) and `b2_k99` (both) in a table |
+
+Everything else in A2 is unchanged and needs no re-check. The emulator has no `a1_k01`, so it skips
+that row in 3.
 
 ## A2 device results (2026-09-24)
 
@@ -65,12 +84,18 @@ POCO, `a1_k02` on the emulator).
    ≈1.4 s of 4.0 s), against ≈0.2 s on the POCO and ≈1 s on the emulator relaunch. Not
    investigated; for the cloud session to look at if it matters.
 
+Ian's decisions on these (2026-09-24, Decisions below): 1 dark launch window; 2 a rejection
+shows the result screen only when it's new; 3 the label leads titled packs' detail lines; 4 keep
+re-validating, split the timing log by phase to decide later; 5 accepted as emulator/debug
+cold-start cost.
+
 Screenshots for the design review: `docs/screenshots/a2/poco/` and `docs/screenshots/a2/emulator/`
 (first launch, result, library, relaunch frames, stale access, recovery, one pack, re-pick).
 
 ## A2 progress
 
-`flutter analyze` clean; `flutter test` 117 passing (Flutter 3.47.2, as in `.metadata`).
+`flutter analyze` clean; `flutter test` 128 passing (Flutter 3.47.2, as in `.metadata`). Was 117
+before Ian's review changes.
 
 **Built:**
 - `lib/packs/`: `PackStorage` + `SafPackStorage` (SAF, tree URI stored); `manifest.dart`
@@ -92,32 +117,28 @@ Screenshots for the design review: `docs/screenshots/a2/poco/` and `docs/screens
   keeps progress, an unavailable pack stays listed), controller, and widget tests.
 - `test/fixtures/real/README.md` marks `a1_k01_manifest.json` as a pipeline snapshot.
 
-**Open points to raise with Ian when reporting A2** (Claude's working choices, not decided):
-- Icons: DESIGN says Phosphor, which isn't in the package list; Material outlined icons stand in
-  (`AppIcons` in `lib/library/widgets.dart`) unless Ian approves `phosphor_flutter`.
-- A known pack rejected on rescan shows the library tag *Not found*, which is inaccurate.
-- DESIGN's verdict *Nothing else changed* is untrue when the same rescan loaded packs; in that case
-  the panel says *One pack wasn't loaded. The rest are ready.* instead.
-- The result screen has a back arrow to the library: with a rejection, DESIGN's only button is
-  *Rescan*, which gives no way on.
-- An empty folder (no packs, nothing rejected): neutral panel *No packs in this folder yet. Copy
-  your pack folders into it, then rescan.*, button *Rescan*; the library shows the same line.
-- *Not found* rows also appear on the result screen (ringed disc, *not found · progress kept*).
-  A rejected pack is reported on every rescan, so a broken pack shows the result screen at each
-  launch until it's fixed.
-- "Ringed" disc drawn as a thick neutral ring; hollow as a thin one.
-- A2 has no *Change folder* outside the stale-access screen (Settings is later).
-- Proposed wording (all in `lib/library/copy.dart`): rejection reasons *not loaded · N audio
-  files missing*, *· manifest couldn't be read*, *· manifest doesn't match the pack format*,
-  *· folder name doesn't match the pack (a1_k02)*, *· audio format mp3 isn't supported*,
-  *· couldn't be saved on this phone*; known packs add *· progress kept*; missing pack *not found ·
-  progress kept*. Stale access: *Can't reach your pack folder*, the folder tile, *The folder may
-  have moved, or the phone's storage may not be ready yet. That can happen just after it starts
-  up.* (or *Ohrwurm no longer has permission to read it.*) *Nothing has been deleted. Your packs
-  and progress are kept on this phone.*, **Try again**, **Choose folder**. One pack: *That looks
-  like one pack* / *The folder you picked has a manifest in it, so it holds a single pack. Choose
-  the folder your pack folders are in, usually the one above it.* Library heading *Your packs*,
-  *Checking the folder…* while a rescan runs; first scan *Reading your packs…*.
+**Changes from Ian's review (2026-09-24, cloud session; not yet re-checked on a device):**
+- Android launch window and window background are DESIGN's `bg`
+  (`android/app/src/main/res/values/colors.xml`, both `styles.xml`, both `launch_background.xml`).
+  Not buildable in the cloud session (no Android SDK): re-check 1.
+- `RejectionStore` (`PrefsRejectionStore`, key `last_rejections` in `shared_preferences`) keeps the
+  last rescan's rejections as `rejectionKey`s: the folder plus the reason as reported (type, and
+  the number of missing clips). An automatic rescan shows the result when a pack was added,
+  updated or newly went missing (`RescanReport.loadedOrLost`), or a rejection isn't in the store.
+  The library tags an unavailable pack *Not loaded* when its folder is in the store
+  (`LibraryController.wasRejected`), loaded before the library first shows.
+- `rowDetail` puts `packLabel` first for titled packs.
+- The rescan timing log gives each folder's phases: `(list, read, check[, save])`.
+- `PopScope` on the result screen: the system back goes to the library.
+- Phosphor regular font bundled as `assets/fonts/Phosphor-Regular.ttf` (MIT,
+  `Phosphor-LICENSE.txt`), taken from the official `phosphor_flutter` 2.1.0, which itself doesn't
+  compile on Flutter 3.47 (`IconData` is final). `AppIcons` are `IconData` in family `Phosphor`,
+  with that package's codepoints (checked against the font's cmap). No Dart package added.
+- DESIGN 2 and 4 now describe: the back arrow, *not found* rows, the disc drawing, the label in the
+  detail line, *The rest are ready.*, the empty-folder panel and line, and the *Not loaded* tag.
+- Tests: controller (rejection shown once; Rescan still shows it; new reason; fixed then broken;
+  *Not loaded* remembered before the launch rescan ends; missing ≠ rejected), rescanner (rejection
+  keys, `loadedOrLost`, phase log), widgets (label in rows, *Not loaded* tag, system back), icons.
 
 ## Done
 
@@ -167,12 +188,30 @@ so. APP_SPEC and DESIGN remain the source of truth for behaviour; this is the lo
 | 2026-09-24 | Push A2 work in progress and continue it in a cloud session | Ian's choice; reason not stated |
 | 2026-09-24 | Continue A2 in a cloud session on branch `a2` | Ian's instruction |
 | 2026-09-24 | **Local sessions only for what needs Ian's machine** (devices, emulator, adb). Everything else — code changes, fixes, analyze and tests, docs — in a cloud session. A local session records device results in STATUS, commits and pushes; it doesn't fix failures | Ian's instruction |
+| 2026-09-24 | **Launch window is DESIGN's `bg`**, no image, in light and dark system modes (A2 finding 1) | Ian gave no reason. Claude's case: the template's white window shows on every cold start and fades into the dark app; DESIGN has no splash screen, so no image |
+| 2026-09-24 | **A rejection opens the result screen after an automatic rescan only when it's new**: a folder plus reason not in the last rescan's rejections, kept in `shared_preferences`. A new reason, or a pack fixed and broken again, is new. Manual Rescan always shows everything. Added, updated and newly missing packs still show it (A2 finding 2; refines the 2026-09-24 "only when something changed" decision) | Ian gave no reason. Claude's case: a broken pack otherwise brings the result screen back at every launch; this treats a rejection like a missing pack, reported when it happens |
+| 2026-09-24 | **Result rows for titled packs start the detail line with the label**: *A1 · Chapter 1 · added · 200 words* (A2 finding 3; APP_SPEC 4.3, DESIGN 2) | Ian gave no reason. Claude's case: APP_SPEC 4.3 puts the label beneath a title everywhere; same pattern as the library's meta line |
+| 2026-09-24 | **Keep validating every pack at every rescan for now; split the debug timing log by phase** (list, read, check, save) and decide with device numbers (A2 finding 4) | Ian gave no reason. Claude's case: only schema checking could be skipped, and it's unknown whether it or SAF listing dominates |
+| 2026-09-24 | **Emulator first-scan delay accepted** as emulator/debug cold-start cost; no investigation or logging (A2 finding 5) | Ian gave no reason |
+| 2026-09-24 | **Phosphor icons, regular weight.** First approved as the `phosphor_flutter` package; it doesn't compile on Flutter 3.47, so instead **Phosphor's regular font is bundled** (MIT, from the official package), with `IconData` constants in `AppIcons`. No Dart package added (DESIGN Icons) | Ian gave no reason. Claude's case: DESIGN asks for Phosphor; bundling the font like Inter adds no third-party code to break on Flutter upgrades. Community forks were the other option |
+| 2026-09-24 | **A known pack rejected on rescan is tagged *Not loaded*** in the library; *Not found* only when its folder is gone. Known from the stored rejections, so right from launch (DESIGN 4) | Ian gave no reason. Claude's case: *Not found* was untrue for a folder that's there; a remembered tag avoids a label that flips a second after launch |
+| 2026-09-24 | Verdict *One pack wasn't loaded. The rest are ready.* when the same rescan also added or updated packs; DESIGN's *Nothing else changed.* otherwise (DESIGN 2) | Ian gave no reason. Claude's case: DESIGN's words are untrue in that case |
+| 2026-09-24 | **The result screen keeps its back arrow to the library**, and the system back does the same (DESIGN 2) | Ian gave no reason. Claude's case: with a rejection, **Rescan** alone gives no way on |
+| 2026-09-24 | **Empty folder**: neutral panel and library line *No packs in this folder yet. Copy your pack folders into it, then rescan.*, button **Rescan** (DESIGN 2, 4) | Ian gave no reason |
+| 2026-09-24 | **Known packs no longer found get a result row**: ringed disc, *not found · progress kept* (DESIGN 2; APP_SPEC 5.2's report) | Ian gave no reason. Claude's case: APP_SPEC 5.2 reports unavailable packs |
+| 2026-09-24 | Discs are 12 px: filled accent; 1.5 px `neutral400` ring (hollow); 3 px `neutral400` ring (ringed); 1.5 px `neutral600` ring (skipped) (DESIGN 2) | Ian gave no reason; approved as seen on the POCO screenshots |
+| 2026-09-24 | **No *Change folder* outside the stale-access screen until Settings** (APP_SPEC 14); Settings has no build step yet — which step gets it is Ian's call | Ian gave no reason. Claude's case: the spec puts it in Settings; Ian's folder is fixed |
+| 2026-09-24 | **A2 wording approved as proposed** (`lib/library/copy.dart`, listed in DESIGN 2 and 4 and in the device re-check), plus *Not loaded* | Ian gave no reason |
 | 2026-09-24 | Don't commit `a1_k01`'s audio. **Commit its manifest** as `test/fixtures/real/a1_k01_manifest.json`, marked as a pipeline snapshot, with a validator test that it passes | Cross-repo check that the app's and pipeline's schema copies still agree; the audio is 21 MB |
 
 ## Pending
 
 - **Clip fails to load mid-session** — behaviour undecided (APP_SPEC 17). Needed by A4.
-- **A2 wording** — to be proposed during A2 and reviewed by Ian.
+- **Settings has no build step** (APP_SPEC 14, DESIGN 9: pauses, speed, keep screen on, *Change
+  folder*, Rescan). A2 offers *Change folder* only on the stale-access screen. Which step builds
+  Settings is Ian's call.
+- **Rescan cost per chapter** — decide after the phase timings in the A2 re-check (row 12) whether
+  unchanged packs should skip schema checking.
 - **Preload mechanism** — designed in A3's plan.
 - Open since the start: displaying Mirror recording counts; colour-coding by article (on hold); iOS
   (later).

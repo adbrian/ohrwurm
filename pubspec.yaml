@@ -39,3 +39,9 @@ flutter:
           weight: 400
         - asset: assets/fonts/Inter-Medium.ttf
           weight: 500
+    # Phosphor icons 2.1, regular weight, MIT: assets/fonts/Phosphor-LICENSE.txt. The font file
+    # from the official phosphor_flutter 2.1.0, bundled without the package, which doesn't
+    # compile on Flutter 3.47 (STATUS, 2026-09-24).
+    - family: Phosphor
+      fonts:
+        - asset: assets/fonts/Phosphor-Regular.ttf

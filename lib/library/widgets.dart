@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
 
-/// Stand-ins for DESIGN's Phosphor icons. Phosphor is approved, but `phosphor_flutter` 2.1.0
-/// doesn't compile on Flutter 3.47; how to bring it in is still open (STATUS, 2026-09-24).
+/// DESIGN's Phosphor icons, regular (stroked) weight, from the bundled Phosphor font
+/// (`pubspec.yaml`). Codepoints as in phosphor_flutter 2.1.0's `PhosphorIconsRegular`.
 abstract final class AppIcons {
-  static const headphones = Icons.headphones_outlined;
-  static const folder = Icons.folder_outlined;
-  static const back = Icons.arrow_back;
-  static const rescan = Icons.refresh;
+  static const _family = 'Phosphor';
+
+  static const headphones = IconData(0xe2a6, fontFamily: _family);
+  static const folder = IconData(0xe24a, fontFamily: _family);
+  static const back = IconData(0xe058, fontFamily: _family); // arrow-left
+  static const rescan = IconData(0xe036, fontFamily: _family); // arrow-clockwise
 }
 
 abstract final class AppTextStyles {

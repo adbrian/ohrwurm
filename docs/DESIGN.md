@@ -67,7 +67,8 @@ backgrounds are low-opacity tints (around 15%) and the `accent900` tile tint.
 
 ### Icons
 
-Phosphor, stroked, 16–20 px, drawn in the current text colour.
+Phosphor, stroked (regular weight), 16–20 px, drawn in the current text colour. Bundled as a font,
+like Inter.
 
 ---
 
@@ -89,16 +90,23 @@ No packs exist yet.
 
 After choosing a folder, and whenever Rescan runs.
 
+- A back arrow, top left, to the library. The system back does the same.
 - The folder location in a surface tile.
-- One row per subfolder: a status disc, the pack's display name, and a detail line.
-  - Filled accent disc — *added · 80 words* / *updated*
-  - Hollow neutral disc — *unchanged*
-  - Ringed neutral disc — *not loaded · 2 audio files missing*
-  - Neutral-600 hollow disc — *no manifest · skipped*
+- One row per subfolder, and one per known pack that's no longer found: a status disc (12 px), the
+  pack's display name, and a detail line. A titled pack's detail line starts with its label, so the
+  title has *A1 · Chapter 1* beneath: *A1 · Chapter 1 · added · 200 words*.
+  - Filled accent disc — *added · 80 words* / *updated · 80 words*
+  - Hollow neutral disc (1.5 px `neutral400` ring) — *unchanged*
+  - Ringed neutral disc (3 px `neutral400` ring) — *not loaded · 2 audio files missing*; a known
+    pack adds *· progress kept*. Also a known pack whose folder is gone: *not found · progress kept*
+  - Neutral-600 hollow disc (1.5 px `neutral600` ring) — *no manifest · skipped*
 - Verdict panel:
   - Everything fine: accent-tinted panel, *2 packs ready.* Button: **Choose packs**.
   - Something rejected: neutral-bordered panel, *One pack wasn't loaded. Nothing else changed.*
-    Button: **Rescan**.
+    If the same rescan added or updated packs: *One pack wasn't loaded. The rest are ready.*
+    (*2 packs weren't loaded. …* for more.) Button: **Rescan**.
+  - No packs and nothing rejected: neutral-bordered panel, *No packs in this folder yet. Copy your
+    pack folders into it, then rescan.* Button: **Rescan**.
 
 This screen carries the product's key promise: **a broken pack is rejected whole and visibly, never
 loaded half-way.**
@@ -124,7 +132,10 @@ The main entry point.
   - meta line: *A1 · Chapter 2 · 80 words* (omit the repeat when it's already the heading)
   - pack progress as a thin bar with *34 / 80 heard*
   - selected: 2 px accent border and a small accent check; never a fill
-  - unavailable: neutral-600, tag *Not found*, not selectable, still shown
+  - unavailable: neutral-600, tag *Not found* — or *Not loaded* when the last rescan rejected it —
+    not selectable, still shown
+- No packs yet: the pack list is the line *No packs in this folder yet. Copy your pack folders into
+  it, then rescan.*
 - **Options** below, as pill segmented controls: Mode, Words, Focus (only when relevant), Style,
   Q&A translation (only with Q&A), Deck order, Card mode (Listen only); a card-limit stepper; an
   *Unheard first* switch.
