@@ -1,18 +1,72 @@
 # Status
 
-A0 and A1 complete. **A2 built and tested on desktop** (branch `a2`); the device runs on the POCO
-and emulator are still to do.
+A0 and A1 complete. **A2 built and tested on desktop, and on both devices (2026-09-24)**: every
+device check passed on the POCO and the emulator (branch `a2`). Not yet reported done: Ian reviews
+the wording, the open points and the device findings first.
 
 ## Next step
 
-**A2 device runs** (needs Ian's machine and a local session, not the cloud): on the POCO and the
-API 34 emulator, first launch → *Choose folder* → `Download/ohrwurm-packs`; check the result
-screen (`a1_k01`, `a1_k02`, `a1_nb01`, `b2_k99` added; `a1_k03` *not loaded · 1 audio file
-missing*; `notes` skipped), relaunch (library appears at once, no result screen unless something
-changed), picking a pack folder as the root, stale access (rename the folder, relaunch, *Try
-again*), and **rescan timings** for `a1_k01` and the 1,500-clip `b2_k99` (debug builds log them:
-`adb logcat | grep ohrwurm.rescan`, one line per folder and a total). Then Ian reviews the
-wording and the open points below, and A2 is reported done.
+1. **Ian reviews** the proposed wording and open points (A2 progress, below), the device findings
+   (A2 device results, below) and the screenshots in `docs/screenshots/a2/`.
+2. **A cloud session** makes whatever changes Ian decides, with `flutter analyze` and
+   `flutter test`. Any change to screens or rescan needs a short device re-check in a local
+   session.
+3. Then A2 is reported done.
+
+## A2 device results (2026-09-24)
+
+Local session. Debug APK from `0a24dc6`, installed on the POCO F1 (Android 10) over the A1 build (no
+saved folder, empty database), and freshly on the `ohrwurm_api34` emulator (Android 14). Ian
+tapped; Claude used adb for screenshots, logcat and renaming the pack folder. The emulator has no
+`a1_k01`. No code was changed and analyze/test were not run in this session.
+
+| Check | POCO F1 (Android 10) | Emulator (Android 14) |
+|---|---|---|
+| First launch (DESIGN 1) | Pass | Pass |
+| *Choose folder* → `Download/ohrwurm-packs` → result screen | Pass: `a1_k01`, `a1_k02`, `a1_nb01`, `b2_k99` *added*; `a1_k03` *not loaded · 1 audio file missing*; `notes` *no manifest · skipped*; *One pack wasn't loaded. The rest are ready.* | Pass, same without `a1_k01` (no "Allow access?" dialog on Android 10; Android 14 asks) |
+| Library (back arrow) | Pass: *Your packs*, 4 cards in sort order, meta lines per DESIGN 4. `a1_k03` absent — correct, it was never a known pack | Pass, 3 cards |
+| Relaunch: library at once, rescan behind it | Pass: library with *Checking the folder…* shows before the rescan ends (≈1.3 s here), then the result screen returns because `a1_k03` is still broken | Pass, same |
+| Stale access: folder renamed, relaunch | Pass: *Can't reach your pack folder*, no empty library. Database untouched: all 4 packs still `available = 1`, 335 cards | Pass |
+| *Try again* while still missing | Pass: stays on the stale screen | Pass |
+| *Try again* after the folder is back | Pass: recovers without re-picking, all *unchanged* | Pass |
+| Pick a pack folder (`a1_k02`) as root | Pass: *That looks like one pack*; the saved folder is not replaced. Choosing the parent then loaded everything *unchanged* | Pass (screenshot `emulator/06-looks-like-one-pack.png`); saved folder confirmed unchanged |
+| Folder saved as the tree URI | Pass: `tree/primary%3ADownload%2Fohrwurm-packs` in DataStore | Pass |
+
+**Rescan timings** (`adb logcat | grep ohrwurm.rescan`, debug build, ms):
+
+| Folder | POCO first scan | POCO relaunch | Emulator first scan | Emulator relaunch |
+|---|---|---|---|---|
+| `a1_k01` (2,267 files, 200 cards) | 908 | 817 | — | — |
+| `b2_k99` (1,501 files, 125 cards) | 366 | 333 | 1,061 | 1,937 |
+| `a1_nb01` | 455 | 374 | 72 | 104 |
+| `a1_k02` | 63 | 34 | 256 | 619 |
+| `a1_k03` (rejected) | 56 | 48 | 41 | 96 |
+| `notes` (skipped) | 8 | 7 | 16 | 24 |
+| **Total** | **2,081** | **2,247** | **4,007** | **3,807** |
+
+Other full rescans: POCO 2,330 / 2,095 / 2,345 / 2,207 ms; emulator 2,028 ms. Stale checks
+(`RootUnavailable`): POCO 181–766 ms, emulator 41–819 ms. Pack folder as root (`RootIsAPack`):
+POCO 93 ms, emulator 348 ms. The first folder scanned carries some one-off cost (`a1_nb01` on the
+POCO, `a1_k02` on the emulator).
+
+**Failed or looked wrong** — nothing failed; for Ian's review:
+1. **White launch window on every cold start.** The screen is white until Flutter's first frame,
+   then fades into the dark app: ≈1.5 s on the POCO, several seconds on the emulator (debug builds
+   start slowly, so release will be shorter, but the white is the template's launch background and
+   shows in any build). Ian noticed it. Screenshots `*/04a-relaunch-white-launch-window.png`.
+2. **The result screen returns on every launch while a pack is broken** (the known open point,
+   confirmed on device). The library is visible for only about a second first; Ian didn't notice it.
+3. **Result-screen rows show only the title** for titled packs (*Guten Tag!*, *Stress test*), with
+   no *A1 · Chapter 1*; untitled packs show *A1 · Notebook 1*. The library cards do show both.
+4. **Every launch re-validates every pack**, so a relaunch costs about as much as the first scan
+   (≈2.2 s on the POCO for these five packs, ≈0.9 s for `a1_k01` alone). It runs in the background
+   and doesn't block the library, but it grows with the number of chapters.
+5. **Emulator first scan: ≈2.5 s before the first folder finished** (per-folder times sum to
+   ≈1.4 s of 4.0 s), against ≈0.2 s on the POCO and ≈1 s on the emulator relaunch. Not
+   investigated; for the cloud session to look at if it matters.
+
+Screenshots for the design review: `docs/screenshots/a2/poco/` and `docs/screenshots/a2/emulator/`
+(first launch, result, library, relaunch frames, stale access, recovery, one pack, re-pick).
 
 ## A2 progress
 
@@ -127,9 +181,10 @@ so. APP_SPEC and DESIGN remain the source of truth for behaviour; this is the lo
 
 - **POCO F1** (`cf47a954`): packs at `Download/ohrwurm-packs/` — fixtures `a1_k02`, `a1_k03`,
   `a1_nb01`, `notes`, stress pack `b2_k99`, and the real pack `a1_k01`. Installed: the app
-  (`io.github.adbrian.ohrwurm`, debug build) and the spike (`…ohrwurm.spike`, data cleared).
-  Stay-awake is off.
-- **Emulator** `ohrwurm_api34` (API 34, KVM): shut down. Has the fixtures and `b2_k99`, not
-  `a1_k01`. Start with `~/android-sdk/emulator/emulator -avd ohrwurm_api34`.
+  (`io.github.adbrian.ohrwurm`, A2 debug build from `0a24dc6`, `Download/ohrwurm-packs` chosen)
+  and the spike (`…ohrwurm.spike`, data cleared). Stay-awake is off.
+- **Emulator** `ohrwurm_api34` (API 34, KVM): has the fixtures and `b2_k99`, not `a1_k01`. The A2
+  debug app is installed with `Download/ohrwurm-packs` chosen. Start with
+  `~/android-sdk/emulator/emulator -avd ohrwurm_api34`.
 - `main` ignores `spike/`; the spike lives only on `spike/a0`. Regenerate the stress pack with
   `python3 spike/make_stress_pack.py` on that branch (writes `spike/out/`, not committed).
