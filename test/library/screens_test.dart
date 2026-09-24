@@ -45,10 +45,12 @@ void main() {
   });
 
   Future<void> show(WidgetTester tester) async {
-    await tester.pumpWidget(ChangeNotifierProvider.value(
-      value: library,
-      child: MaterialApp(theme: buildAppTheme(), home: const HomeScreen()),
-    ));
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: library,
+        child: MaterialApp(theme: buildAppTheme(), home: const HomeScreen()),
+      ),
+    );
   }
 
   /// Runs controller work that does real file and isolate I/O, then redraws.
@@ -67,8 +69,9 @@ void main() {
     expect(find.widgetWithText(OutlinedButton, Copy.chooseFolder), findsOneWidget);
   });
 
-  testWidgets('the fixture folder: two loaded, a1_k03 rejected whole, notes skipped',
-      (tester) async {
+  testWidgets('the fixture folder: two loaded, a1_k03 rejected whole, notes skipped', (
+    tester,
+  ) async {
     await run(tester, library.start);
     storage.picked = root.path;
     // Not a tap: the scan does real file and isolate I/O, which needs runAsync.
@@ -89,8 +92,9 @@ void main() {
     expect(find.widgetWithText(OutlinedButton, Copy.rescan), findsOneWidget);
   });
 
-  testWidgets('the library lists packs in order, the missing one dimmed and tagged',
-      (tester) async {
+  testWidgets('the library lists packs in order, the missing one dimmed and tagged', (
+    tester,
+  ) async {
     store.uri = root.path;
     await run(tester, library.start);
     Directory(p.join(root.path, 'a1_nb01')).deleteSync(recursive: true);
@@ -110,8 +114,9 @@ void main() {
     expect(find.text('In der Stadt'), findsNothing);
   });
 
-  testWidgets('a known pack rejected on rescan is tagged Not loaded, not Not found',
-      (tester) async {
+  testWidgets('a known pack rejected on rescan is tagged Not loaded, not Not found', (
+    tester,
+  ) async {
     store.uri = root.path;
     await run(tester, library.start);
     File(p.join(root.path, 'a1_nb01', 'manifest.json')).writeAsStringSync('{');
@@ -178,62 +183,78 @@ void main() {
     );
 
     RescanRow rejected(Rejection why, {bool known = false}) => RescanRow(
-          folderName: 'a1_k02',
-          outcome: RescanOutcome.rejected,
-          rejection: why,
-          known: known,
-        );
+      folderName: 'a1_k02',
+      outcome: RescanOutcome.rejected,
+      rejection: why,
+      known: known,
+    );
 
     test('rejection reasons', () {
-      expect(rowDetail(rejected(const ClipsMissing(['a', 'b']))),
-          'not loaded · 2 audio files missing');
-      expect(rowDetail(rejected(const ManifestUnreadable())),
-          "not loaded · manifest couldn't be read");
-      expect(rowDetail(rejected(const SchemaInvalid(['x']))),
-          "not loaded · manifest doesn't match the pack format");
-      expect(rowDetail(rejected(const FolderMismatch('a1_k05'))),
-          "not loaded · folder name doesn't match the pack (a1_k05)");
-      expect(rowDetail(rejected(const UnplayableAudio('mp3'))),
-          "not loaded · audio format mp3 isn't supported");
-      expect(rowDetail(rejected(const ManifestUnreadable(), known: true)),
-          "not loaded · manifest couldn't be read · progress kept");
       expect(
-        rowDetail(const RescanRow(
-          folderName: 'a1_k03',
-          outcome: RescanOutcome.rejected,
-          pack: titled,
-          rejection: ClipsMissing(['a']),
-          known: true,
-        )),
+        rowDetail(rejected(const ClipsMissing(['a', 'b']))),
+        'not loaded · 2 audio files missing',
+      );
+      expect(
+        rowDetail(rejected(const ManifestUnreadable())),
+        "not loaded · manifest couldn't be read",
+      );
+      expect(
+        rowDetail(rejected(const SchemaInvalid(['x']))),
+        "not loaded · manifest doesn't match the pack format",
+      );
+      expect(
+        rowDetail(rejected(const FolderMismatch('a1_k05'))),
+        "not loaded · folder name doesn't match the pack (a1_k05)",
+      );
+      expect(
+        rowDetail(rejected(const UnplayableAudio('mp3'))),
+        "not loaded · audio format mp3 isn't supported",
+      );
+      expect(
+        rowDetail(rejected(const ManifestUnreadable(), known: true)),
+        "not loaded · manifest couldn't be read · progress kept",
+      );
+      expect(
+        rowDetail(
+          const RescanRow(
+            folderName: 'a1_k03',
+            outcome: RescanOutcome.rejected,
+            pack: titled,
+            rejection: ClipsMissing(['a']),
+            known: true,
+          ),
+        ),
         'A1 · Chapter 3 · not loaded · 1 audio file missing · progress kept',
       );
       expect(
-        rowDetail(const RescanRow(
-          folderName: 'a1_nb01',
-          outcome: RescanOutcome.notFound,
-          known: true,
-        )),
+        rowDetail(
+          const RescanRow(folderName: 'a1_nb01', outcome: RescanOutcome.notFound, known: true),
+        ),
         'not found · progress kept',
       );
     });
 
     test('a titled pack leads with its label; an untitled one does not repeat it', () {
       expect(
-        rowDetail(const RescanRow(
-          folderName: 'a1_k03',
-          outcome: RescanOutcome.updated,
-          pack: titled,
-          cardCount: 3,
-        )),
+        rowDetail(
+          const RescanRow(
+            folderName: 'a1_k03',
+            outcome: RescanOutcome.updated,
+            pack: titled,
+            cardCount: 3,
+          ),
+        ),
         'A1 · Chapter 3 · updated · 3 words',
       );
       expect(
-        rowDetail(const RescanRow(
-          folderName: 'a1_nb01',
-          outcome: RescanOutcome.notFound,
-          pack: untitled,
-          known: true,
-        )),
+        rowDetail(
+          const RescanRow(
+            folderName: 'a1_nb01',
+            outcome: RescanOutcome.notFound,
+            pack: untitled,
+            known: true,
+          ),
+        ),
         'not found · progress kept',
       );
     });
@@ -242,20 +263,26 @@ void main() {
         RescanRow(folderName: 'x', outcome: outcome, cardCount: 1);
 
     test('verdicts', () {
-      expect(verdict(RescanReport([ok(RescanOutcome.added), ok(RescanOutcome.unchanged)])),
-          (fine: true, message: '2 packs ready.'));
-      expect(verdict(RescanReport([ok(RescanOutcome.unchanged)])),
-          (fine: true, message: 'One pack ready.'));
+      expect(verdict(RescanReport([ok(RescanOutcome.added), ok(RescanOutcome.unchanged)])), (
+        fine: true,
+        message: '2 packs ready.',
+      ));
+      expect(verdict(RescanReport([ok(RescanOutcome.unchanged)])), (
+        fine: true,
+        message: 'One pack ready.',
+      ));
+      expect(verdict(RescanReport([ok(RescanOutcome.unchanged), rejected(const SaveFailed())])), (
+        fine: false,
+        message: "One pack wasn't loaded. Nothing else changed.",
+      ));
       expect(
-        verdict(RescanReport([ok(RescanOutcome.unchanged), rejected(const SaveFailed())])),
-        (fine: false, message: "One pack wasn't loaded. Nothing else changed."),
-      );
-      expect(
-        verdict(RescanReport([
-          ok(RescanOutcome.added),
-          rejected(const SaveFailed()),
-          rejected(const SaveFailed()),
-        ])),
+        verdict(
+          RescanReport([
+            ok(RescanOutcome.added),
+            rejected(const SaveFailed()),
+            rejected(const SaveFailed()),
+          ]),
+        ),
         (fine: false, message: "2 packs weren't loaded. The rest are ready."),
       );
       expect(verdict(const RescanReport([])).fine, isFalse);

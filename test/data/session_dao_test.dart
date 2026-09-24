@@ -19,7 +19,7 @@ void main() {
     mode: SessionMode.listen,
     packIds: ['a1_nb01', 'a1_k02'],
     words: Words.noun,
-    focus: Focus.plural,
+    focus: WordFocus.plural,
     style: Style.qa,
     qaTranslate: QaTranslate.question,
     deckOrder: DeckOrder.shuffled,
@@ -41,7 +41,7 @@ void main() {
     expect(o.mode, SessionMode.listen);
     expect(o.packIds, ['a1_nb01', 'a1_k02']);
     expect(o.words, Words.noun);
-    expect(o.focus, Focus.plural);
+    expect(o.focus, WordFocus.plural);
     expect(o.style, Style.qa);
     expect(o.qaTranslate, QaTranslate.question);
     expect(o.deckOrder, DeckOrder.shuffled);
@@ -60,7 +60,7 @@ void main() {
         mode: SessionMode.mirror,
         packIds: ['a1_k02'],
         words: Words.all,
-        focus: Focus.base,
+        focus: WordFocus.base,
         style: Style.statement,
         qaTranslate: QaTranslate.both,
         deckOrder: DeckOrder.sequential,

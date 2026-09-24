@@ -17,12 +17,15 @@ class ProgressDao {
     final now = timestamp(_clock);
     await _db.transaction((txn) async {
       await txn.rawInsert('INSERT OR IGNORE INTO progress (key) VALUES (?)', [key]);
-      await txn.rawUpdate('''
+      await txn.rawUpdate(
+        '''
 UPDATE progress
 SET times_heard = times_heard + 1,
     first_heard_at = COALESCE(first_heard_at, ?),
     last_heard_at = ?
-WHERE key = ?''', [now, now, key]);
+WHERE key = ?''',
+        [now, now, key],
+      );
     });
   }
 
@@ -30,16 +33,21 @@ WHERE key = ?''', [now, now, key]);
   Future<void> incrementRecorded(String key) async {
     await _db.transaction((txn) async {
       await txn.rawInsert('INSERT OR IGNORE INTO progress (key) VALUES (?)', [key]);
-      await txn.rawUpdate(
-        'UPDATE progress SET times_recorded = times_recorded + 1 WHERE key = ?',
-        [key],
-      );
+      await txn.rawUpdate('UPDATE progress SET times_recorded = times_recorded + 1 WHERE key = ?', [
+        key,
+      ]);
     });
   }
 
   Future<Progress?> get(String key) async {
     final rows = await _db.query('progress', where: 'key = ?', whereArgs: [key]);
     return rows.isEmpty ? null : Progress.fromRow(rows.single);
+  }
+
+  /// Every word key heard at least once, for *Unheard first* (APP_SPEC 10.1).
+  Future<Set<String>> heardKeys() async {
+    final rows = await _db.query('progress', columns: ['key'], where: 'times_heard > 0');
+    return {for (final row in rows) row['key'] as String};
   }
 
   /// Pack progress for every pack that has cards: its distinct keys heard at least once, and

@@ -18,8 +18,8 @@ class ManifestValidator {
 
   /// The validation errors, empty when [manifest] is valid.
   List<String> errors(Object? manifest) => [
-        for (final e in _schema.validate(manifest, validateFormats: false).errors) e.toString(),
-      ];
+    for (final e in _schema.validate(manifest, validateFormats: false).errors) e.toString(),
+  ];
 }
 
 /// A valid manifest, read into the rows `PackDao.replacePack` writes.
@@ -58,15 +58,17 @@ class PackManifest {
           }
         }
       }
-      cards.add(CardRow(
-        cardId: c['id'] as String,
-        packId: packId,
-        key: c['key'] as String,
-        type: c['type'] as String,
-        addedAt: c['added_at'] as String,
-        examples: examples,
-        contentJson: jsonEncode(c),
-      ));
+      cards.add(
+        CardRow(
+          cardId: c['id'] as String,
+          packId: packId,
+          key: c['key'] as String,
+          type: c['type'] as String,
+          addedAt: c['added_at'] as String,
+          examples: examples,
+          contentJson: jsonEncode(c),
+        ),
+      );
     }
 
     return PackManifest(
@@ -85,14 +87,14 @@ class PackManifest {
   }
 
   static ExampleSlot _slot(String form, String kind) => switch ((form, kind)) {
-        ('base', 'statement') => ExampleSlot.baseStatement,
-        ('base', 'qa') => ExampleSlot.baseQa,
-        ('plural', 'statement') => ExampleSlot.pluralStatement,
-        ('plural', 'qa') => ExampleSlot.pluralQa,
-        ('feminine', 'statement') => ExampleSlot.feminineStatement,
-        ('feminine', 'qa') => ExampleSlot.feminineQa,
-        _ => throw ArgumentError('Unknown example form/kind: $form/$kind'),
-      };
+    ('base', 'statement') => ExampleSlot.baseStatement,
+    ('base', 'qa') => ExampleSlot.baseQa,
+    ('plural', 'statement') => ExampleSlot.pluralStatement,
+    ('plural', 'qa') => ExampleSlot.pluralQa,
+    ('feminine', 'statement') => ExampleSlot.feminineStatement,
+    ('feminine', 'qa') => ExampleSlot.feminineQa,
+    _ => throw ArgumentError('Unknown example form/kind: $form/$kind'),
+  };
 }
 
 /// Why a pack was rejected (APP_SPEC 5.2, step 2).
@@ -145,9 +147,7 @@ class ManifestCheck {
   /// The pack as its manifest describes it, when the manifest was valid against the schema.
   final PackInput? pack;
 
-  ManifestCheck.accepted(PackManifest this.manifest)
-      : rejection = null,
-        pack = manifest.pack;
+  ManifestCheck.accepted(PackManifest this.manifest) : rejection = null, pack = manifest.pack;
 
   const ManifestCheck.rejected(Rejection this.rejection, {this.pack}) : manifest = null;
 }

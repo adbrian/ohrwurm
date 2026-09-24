@@ -34,17 +34,17 @@ void main() {
   });
 
   LibraryController controller({ManifestChecker? check}) => LibraryController(
-        storage: storage,
-        packDao: database.packs,
-        rescanner: Rescanner(
-          storage: storage,
-          packs: database.packs,
-          schemaJson: schemaJson,
-          check: check ?? checkManifestInIsolate,
-        ),
-        folderStore: store,
-        rejectionStore: rejections,
-      );
+    storage: storage,
+    packDao: database.packs,
+    rescanner: Rescanner(
+      storage: storage,
+      packs: database.packs,
+      schemaJson: schemaJson,
+      check: check ?? checkManifestInIsolate,
+    ),
+    folderStore: store,
+    rejectionStore: rejections,
+  );
 
   List<String> ids(LibraryController c) => [for (final p in c.packs) p.packId];
 
@@ -93,20 +93,23 @@ void main() {
     await controller().start();
 
     final gate = Completer<void>();
-    final c = controller(check: ({
-      required schemaJson,
-      required folderName,
-      required manifestText,
-      required clipNames,
-    }) async {
-      await gate.future;
-      return checkManifest(
-        schemaJson: schemaJson,
-        folderName: folderName,
-        manifestText: manifestText,
-        clipNames: clipNames,
-      );
-    });
+    final c = controller(
+      check:
+          ({
+            required schemaJson,
+            required folderName,
+            required manifestText,
+            required clipNames,
+          }) async {
+            await gate.future;
+            return checkManifest(
+              schemaJson: schemaJson,
+              folderName: folderName,
+              manifestText: manifestText,
+              clipNames: clipNames,
+            );
+          },
+    );
     final started = c.start();
     await pumpEventQueue();
     expect(c.view, LibraryView.library);
@@ -169,10 +172,7 @@ void main() {
       store.uri = root.path;
       await controller().start();
       final k03 = Directory(p.join(root.path, 'a1_k03'));
-      final another = k03
-          .listSync()
-          .whereType<File>()
-          .firstWhere((f) => f.path.endsWith('.ogg'));
+      final another = k03.listSync().whereType<File>().firstWhere((f) => f.path.endsWith('.ogg'));
       another.deleteSync();
 
       final c = controller();
@@ -207,20 +207,23 @@ void main() {
 
       // Before the launch rescan ends, the library already knows it was rejected.
       final gate = Completer<void>();
-      final next = controller(check: ({
-        required schemaJson,
-        required folderName,
-        required manifestText,
-        required clipNames,
-      }) async {
-        await gate.future;
-        return checkManifest(
-          schemaJson: schemaJson,
-          folderName: folderName,
-          manifestText: manifestText,
-          clipNames: clipNames,
-        );
-      });
+      final next = controller(
+        check:
+            ({
+              required schemaJson,
+              required folderName,
+              required manifestText,
+              required clipNames,
+            }) async {
+              await gate.future;
+              return checkManifest(
+                schemaJson: schemaJson,
+                folderName: folderName,
+                manifestText: manifestText,
+                clipNames: clipNames,
+              );
+            },
+      );
       final started = next.start();
       await pumpEventQueue();
       expect(next.scanning, isTrue);
@@ -245,15 +248,17 @@ void main() {
     });
   });
 
-  test('a saved folder with nothing loaded yet shows the first scan, not an empty library',
-      () async {
-    store.uri = root.path;
-    final c = controller();
-    final views = <LibraryView>[];
-    c.addListener(() => views.add(c.view));
-    await c.start();
-    expect(views.first, LibraryView.firstScan);
-  });
+  test(
+    'a saved folder with nothing loaded yet shows the first scan, not an empty library',
+    () async {
+      store.uri = root.path;
+      final c = controller();
+      final views = <LibraryView>[];
+      c.addListener(() => views.add(c.view));
+      await c.start();
+      expect(views.first, LibraryView.firstScan);
+    },
+  );
 
   test('the Rescan action always shows the result', () async {
     Directory(p.join(root.path, 'a1_k03')).deleteSync(recursive: true);

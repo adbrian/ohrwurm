@@ -46,8 +46,7 @@ class AppPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(AppSpace.xl),
           children: [
-            if (leading != null)
-              Align(alignment: Alignment.centerLeft, child: leading!),
+            if (leading != null) Align(alignment: Alignment.centerLeft, child: leading!),
             ...children,
           ],
         ),
@@ -66,12 +65,12 @@ class PlainIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => IconButton(
-        icon: Icon(icon, size: 20),
-        tooltip: tooltip,
-        color: AppColors.text,
-        disabledColor: AppColors.neutral600,
-        onPressed: onPressed,
-      );
+    icon: Icon(icon, size: 20),
+    tooltip: tooltip,
+    color: AppColors.text,
+    disabledColor: AppColors.neutral600,
+    onPressed: onPressed,
+  );
 }
 
 /// The folder location in a surface tile (DESIGN 2).
@@ -125,21 +124,21 @@ class StatusDisc extends StatelessWidget {
   Widget build(BuildContext context) {
     final decoration = switch (style) {
       DiscStyle.filledAccent => const BoxDecoration(
-          color: AppColors.accent,
-          shape: BoxShape.circle,
-        ),
+        color: AppColors.accent,
+        shape: BoxShape.circle,
+      ),
       DiscStyle.hollow => BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.neutral400, width: 1.5),
-        ),
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.neutral400, width: 1.5),
+      ),
       DiscStyle.ringed => BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.neutral400, width: 3),
-        ),
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.neutral400, width: 3),
+      ),
       DiscStyle.faint => BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.neutral600, width: 1.5),
-        ),
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.neutral600, width: 1.5),
+      ),
     };
     return Container(width: size, height: size, decoration: decoration);
   }

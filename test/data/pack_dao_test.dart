@@ -15,14 +15,15 @@ void main() {
 
   tearDown(() => database.close());
 
-  Future<List<String>> keysIn(String packId) async =>
-      [for (final c in await database.cards.cardsInPack(packId)) c.key];
+  Future<List<String>> keysIn(String packId) async => [
+    for (final c in await database.cards.cardsInPack(packId)) c.key,
+  ];
 
   test('replacePack inserts a new pack and its cards', () async {
-    await database.packs.replacePack(
-      packInput('a1_k02', title: 'Freunde'),
-      [card('a1_k02', 'der_freund'), card('a1_k02', 'singen', type: 'verb')],
-    );
+    await database.packs.replacePack(packInput('a1_k02', title: 'Freunde'), [
+      card('a1_k02', 'der_freund'),
+      card('a1_k02', 'singen', type: 'verb'),
+    ]);
 
     final pack = (await database.packs.getPack('a1_k02'))!;
     expect(pack.level, 'a1');
@@ -38,10 +39,10 @@ void main() {
   });
 
   test('replacePack on a known pack replaces its cards wholesale and keeps created_at', () async {
-    await database.packs.replacePack(
-      packInput('a1_k02'),
-      [card('a1_k02', 'der_freund'), card('a1_k02', 'singen')],
-    );
+    await database.packs.replacePack(packInput('a1_k02'), [
+      card('a1_k02', 'der_freund'),
+      card('a1_k02', 'singen'),
+    ]);
     clock.advance(const Duration(days: 3));
     await database.packs.replacePack(
       packInput('a1_k02', generatedAt: '2026-09-20T10:00:00Z', title: 'Neu'),
@@ -69,10 +70,10 @@ void main() {
 
     // Two cards with the same card_id: the second insert violates the primary key.
     await expectLater(
-      database.packs.replacePack(
-        packInput('a1_k02', generatedAt: '2026-09-20T10:00:00Z'),
-        [card('a1_k02', 'singen'), card('a1_k02', 'singen')],
-      ),
+      database.packs.replacePack(packInput('a1_k02', generatedAt: '2026-09-20T10:00:00Z'), [
+        card('a1_k02', 'singen'),
+        card('a1_k02', 'singen'),
+      ]),
       throwsA(anything),
     );
 
@@ -84,10 +85,10 @@ void main() {
 
   test('a failed replacePack of a new pack writes nothing', () async {
     await expectLater(
-      database.packs.replacePack(
-        packInput('a1_k02'),
-        [card('a1_k02', 'singen'), card('a1_k02', 'singen')],
-      ),
+      database.packs.replacePack(packInput('a1_k02'), [
+        card('a1_k02', 'singen'),
+        card('a1_k02', 'singen'),
+      ]),
       throwsA(anything),
     );
     expect(await database.packs.getPack('a1_k02'), isNull);
@@ -138,10 +139,9 @@ void main() {
     await database.progress.incrementRecorded('der_freund');
 
     // The word leaves the pack, then the pack disappears altogether.
-    await database.packs.replacePack(
-      packInput('a1_k02', generatedAt: '2026-09-20T10:00:00Z'),
-      [card('a1_k02', 'singen')],
-    );
+    await database.packs.replacePack(packInput('a1_k02', generatedAt: '2026-09-20T10:00:00Z'), [
+      card('a1_k02', 'singen'),
+    ]);
     await database.packs.setAvailable('a1_k02', false);
 
     final progress = (await database.progress.get('der_freund'))!;
@@ -149,10 +149,9 @@ void main() {
     expect(progress.timesRecorded, 1);
 
     // The word comes back: its progress reattaches.
-    await database.packs.replacePack(
-      packInput('a1_k02', generatedAt: '2026-09-21T10:00:00Z'),
-      [card('a1_k02', 'der_freund')],
-    );
+    await database.packs.replacePack(packInput('a1_k02', generatedAt: '2026-09-21T10:00:00Z'), [
+      card('a1_k02', 'der_freund'),
+    ]);
     expect(
       (await database.progress.packProgress())['a1_k02'],
       const PackProgress(heard: 1, total: 1),

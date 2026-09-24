@@ -84,17 +84,19 @@ class RescanReport extends RescanResult {
   /// Whether anything was added or updated, or a pack went missing. With a rejection seen for
   /// the first time, these are the cases that show the result screen after an automatic rescan
   /// (STATUS, 2026-09-24).
-  bool get loadedOrLost => rows.any((r) => switch (r.outcome) {
-        RescanOutcome.added || RescanOutcome.updated => true,
-        RescanOutcome.notFound => newlyUnavailable.contains(r.folderName),
-        RescanOutcome.unchanged || RescanOutcome.rejected || RescanOutcome.skipped => false,
-      });
+  bool get loadedOrLost => rows.any(
+    (r) => switch (r.outcome) {
+      RescanOutcome.added || RescanOutcome.updated => true,
+      RescanOutcome.notFound => newlyUnavailable.contains(r.folderName),
+      RescanOutcome.unchanged || RescanOutcome.rejected || RescanOutcome.skipped => false,
+    },
+  );
 
   /// Each rejection as a [rejectionKey], to tell a new rejection from one already reported.
   Set<String> get rejections => {
-        for (final r in rows)
-          if (r.outcome == RescanOutcome.rejected) rejectionKey(r.folderName, r.rejection!),
-      };
+    for (final r in rows)
+      if (r.outcome == RescanOutcome.rejected) rejectionKey(r.folderName, r.rejection!),
+  };
 
   int count(RescanOutcome outcome) => rows.where((r) => r.outcome == outcome).length;
 }
@@ -131,13 +133,14 @@ Future<ManifestCheck> checkManifestInIsolate({
   required String folderName,
   required String manifestText,
   required Set<String> clipNames,
-}) =>
-    Isolate.run(() => checkManifest(
-          schemaJson: schemaJson,
-          folderName: folderName,
-          manifestText: manifestText,
-          clipNames: clipNames,
-        ));
+}) => Isolate.run(
+  () => checkManifest(
+    schemaJson: schemaJson,
+    folderName: folderName,
+    manifestText: manifestText,
+    clipNames: clipNames,
+  ),
+);
 
 /// Finds the packs in the root folder and reconciles them with the database (APP_SPEC 5.2).
 ///
@@ -190,8 +193,10 @@ class Rescanner {
       final clock = Stopwatch()..start();
       final phases = _Phases();
       final row = await _scanFolder(folder, known[folder.name], phases);
-      log?.call('ohrwurm.rescan ${folder.name} ${clock.elapsedMilliseconds} ms ($phases): '
-          '${row?.outcome.name ?? 'notFound'}');
+      log?.call(
+        'ohrwurm.rescan ${folder.name} ${clock.elapsedMilliseconds} ms ($phases): '
+        '${row?.outcome.name ?? 'notFound'}',
+      );
       if (row == null) continue;
       rows.add(row);
       if (row.outcome != RescanOutcome.rejected) found.add(folder.name);
@@ -204,12 +209,14 @@ class Rescanner {
       await packs.setAvailable(pack.packId, false);
       // A rejected known pack already has its row.
       if (rows.any((r) => r.folderName == pack.packId)) continue;
-      rows.add(RescanRow(
-        folderName: pack.packId,
-        outcome: RescanOutcome.notFound,
-        pack: _input(pack),
-        known: true,
-      ));
+      rows.add(
+        RescanRow(
+          folderName: pack.packId,
+          outcome: RescanOutcome.notFound,
+          pack: _input(pack),
+          known: true,
+        ),
+      );
     }
 
     rows.sort(_compareRows);
@@ -221,12 +228,12 @@ class Rescanner {
   Future<RescanRow?> _scanFolder(StorageEntry folder, Pack? knownPack, _Phases phases) async {
     final name = folder.name;
     RescanRow rejected(Rejection why, {PackInput? pack}) => RescanRow(
-          folderName: name,
-          outcome: RescanOutcome.rejected,
-          pack: pack ?? _input(knownPack),
-          rejection: why,
-          known: knownPack != null,
-        );
+      folderName: name,
+      outcome: RescanOutcome.rejected,
+      pack: pack ?? _input(knownPack),
+      rejection: why,
+      known: knownPack != null,
+    );
 
     final List<StorageEntry> files;
     try {
@@ -249,7 +256,10 @@ class Rescanner {
           schemaJson: schemaJson,
           folderName: name,
           manifestText: text,
-          clipNames: {for (final f in files) if (!f.isDir) f.name},
+          clipNames: {
+            for (final f in files)
+              if (!f.isDir) f.name,
+          },
         ),
       );
     } catch (_) {

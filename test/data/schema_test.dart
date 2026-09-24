@@ -62,8 +62,7 @@ void main() {
 
   test('no table has a foreign key, so nothing can cascade into progress', () async {
     for (final table in ['packs', 'cards', 'progress', 'session']) {
-      expect(await database.db.rawQuery('PRAGMA foreign_key_list($table)'), isEmpty,
-          reason: table);
+      expect(await database.db.rawQuery('PRAGMA foreign_key_list($table)'), isEmpty, reason: table);
     }
   });
 
@@ -88,12 +87,18 @@ VALUES (2, 'listen', '[]', 'all', 'base', 'statement', 'both', 'sequential', 'lo
     final path = p.join(dir.path, AppDatabase.fileName);
 
     final first = await AppDatabase.open(
-        factory: databaseFactoryFfiNoIsolate, path: path, clock: clock.call);
+      factory: databaseFactoryFfiNoIsolate,
+      path: path,
+      clock: clock.call,
+    );
     await first.progress.markHeard('der_freund');
     await first.close();
 
     final second = await AppDatabase.open(
-        factory: databaseFactoryFfiNoIsolate, path: path, clock: clock.call);
+      factory: databaseFactoryFfiNoIsolate,
+      path: path,
+      clock: clock.call,
+    );
     addTearDown(second.close);
     expect((await second.progress.get('der_freund'))!.timesHeard, 1);
   });

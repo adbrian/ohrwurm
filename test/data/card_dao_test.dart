@@ -29,17 +29,20 @@ void main() {
 
   test('cardsInPack filters by type and required examples', () async {
     await database.packs.replacePack(packInput('a1_k02'), [
-      card('a1_k02', 'der_arzt',
-          examples: {ExampleSlot.baseStatement, ExampleSlot.pluralStatement}),
+      card(
+        'a1_k02',
+        'der_arzt',
+        examples: {ExampleSlot.baseStatement, ExampleSlot.pluralStatement},
+      ),
       card('a1_k02', 'die_musik', examples: {ExampleSlot.baseStatement, ExampleSlot.baseQa}),
       card('a1_k02', 'singen', type: 'verb', examples: {ExampleSlot.baseStatement}),
       card('a1_k02', 'mit', type: 'other', examples: {}),
     ]);
 
     Future<List<String>> keys({String? type, Set<ExampleSlot> require = const {}}) async => [
-          for (final c in await database.cards.cardsInPack('a1_k02', type: type, require: require))
-            c.key,
-        ];
+      for (final c in await database.cards.cardsInPack('a1_k02', type: type, require: require))
+        c.key,
+    ];
 
     expect(await keys(type: 'verb'), ['singen']);
     expect(await keys(require: {ExampleSlot.baseStatement}), ['der_arzt', 'die_musik', 'singen']);
@@ -49,8 +52,11 @@ void main() {
   });
 
   test('card rows round-trip every field', () async {
-    final original = card('a1_k02', 'die_aerztin',
-        examples: {ExampleSlot.feminineStatement, ExampleSlot.feminineQa, ExampleSlot.pluralQa});
+    final original = card(
+      'a1_k02',
+      'die_aerztin',
+      examples: {ExampleSlot.feminineStatement, ExampleSlot.feminineQa, ExampleSlot.pluralQa},
+    );
     await database.packs.replacePack(packInput('a1_k02'), [original]);
 
     final read = (await database.cards.getCard('a1_k02__die_aerztin'))!;

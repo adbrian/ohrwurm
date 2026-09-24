@@ -77,8 +77,7 @@ void main() {
     test('collects every referenced clip', () {
       final clips = PackManifest.read(readJson(k02)).clips;
       final onDisk = {
-        for (final f in Directory('test/fixtures/packs/a1_k02').listSync())
-          f.uri.pathSegments.last,
+        for (final f in Directory('test/fixtures/packs/a1_k02').listSync()) f.uri.pathSegments.last,
       }..remove('manifest.json');
       expect(clips, onDisk);
     });
@@ -99,7 +98,8 @@ void main() {
         schemaJson: schemaJson,
         folderName: folder ?? path.split('/').reversed.skip(1).first,
         manifestText: json,
-        clipNames: clips ??
+        clipNames:
+            clips ??
             {for (final f in Directory(File(path).parent.path).listSync()) f.uri.pathSegments.last},
       );
     }

@@ -46,13 +46,12 @@ CardRow card(
   String key, {
   String type = 'noun',
   Set<ExampleSlot> examples = const {ExampleSlot.baseStatement},
-}) =>
-    CardRow(
-      cardId: '${packId}__$key',
-      packId: packId,
-      key: key,
-      type: type,
-      addedAt: '2026-09-01',
-      examples: examples,
-      contentJson: '{"key":"$key"}',
-    );
+}) => CardRow(
+  cardId: '${packId}__$key',
+  packId: packId,
+  key: key,
+  type: type,
+  addedAt: '2026-09-01',
+  examples: examples,
+  contentJson: '{"key":"$key"}',
+);

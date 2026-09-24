@@ -84,13 +84,11 @@ void main() {
 
   test('lists the root and each subfolder exactly once', () async {
     await rescan();
-    expect(storage.listed..sort(), [
-      root.path,
-      packDir('a1_k02'),
-      packDir('a1_k03'),
-      packDir('a1_nb01'),
-      packDir('notes'),
-    ]..sort());
+    expect(
+      storage.listed..sort(),
+      [root.path, packDir('a1_k02'), packDir('a1_k03'), packDir('a1_nb01'), packDir('notes')]
+        ..sort(),
+    );
   });
 
   test('a second rescan with nothing new reports unchanged', () async {
@@ -144,8 +142,7 @@ void main() {
     expect((await database.progress.get('singen'))!.timesHeard, 1);
   });
 
-  test('a pack that disappears stays listed as unavailable, with its rows and progress',
-      () async {
+  test('a pack that disappears stays listed as unavailable, with its rows and progress', () async {
     await rescan();
     await database.progress.markHeard('gehen');
     Directory(packDir('a1_nb01')).deleteSync(recursive: true);
@@ -293,9 +290,15 @@ void main() {
     expect(lines.where((l) => l.startsWith('ohrwurm.rescan a1_k03 ')), hasLength(1));
     // Each folder's line is split by phase.
     final phase = r'\d+ ms \(list \d+, read \d+, check \d+';
-    expect(lines, contains(matches(RegExp('^ohrwurm\\.rescan a1_k02 $phase, save \\d+\\): added\$'))));
+    expect(
+      lines,
+      contains(matches(RegExp('^ohrwurm\\.rescan a1_k02 $phase, save \\d+\\): added\$'))),
+    );
     expect(lines, contains(matches(RegExp('^ohrwurm\\.rescan a1_k03 $phase\\): rejected\$'))));
-    expect(lines, contains(matches(RegExp(r'^ohrwurm\.rescan notes \d+ ms \(list \d+\): skipped$'))));
+    expect(
+      lines,
+      contains(matches(RegExp(r'^ohrwurm\.rescan notes \d+ ms \(list \d+\): skipped$'))),
+    );
     expect(lines.last, matches(RegExp(r'^ohrwurm\.rescan total \d+ ms: RescanReport$')));
   });
 
@@ -312,7 +315,7 @@ class _FailingPackDao extends PackDao {
   final String failOn;
 
   _FailingPackDao(AppDatabase database, {required this.failOn})
-      : super(database.db, () => DateTime.utc(2026, 9, 24));
+    : super(database.db, () => DateTime.utc(2026, 9, 24));
 
   @override
   Future<void> replacePack(PackInput pack, List<CardRow> cards) async {

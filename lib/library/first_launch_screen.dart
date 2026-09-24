@@ -45,10 +45,8 @@ class FirstLaunchScreen extends StatelessWidget {
                   width: AppSpace.xl,
                   child: Text(
                     '${i + 1}',
-                    style: AppText.german(15).copyWith(
-                      color: AppColors.accent300,
-                      fontFeatures: AppText.tabular,
-                    ),
+                    style: AppText.german(15)
+                        .copyWith(color: AppColors.accent300, fontFeatures: AppText.tabular),
                   ),
                 ),
                 Expanded(child: Text(step, style: AppText.english(15))),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../data/models.dart';
 import '../packs/pack_display.dart';
+import '../session/launch.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
 import 'copy.dart';
@@ -30,16 +31,19 @@ class LibraryScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpace.xs),
-        Text(
-          library.scanning ? Copy.checking : library.location ?? '',
-          style: AppTextStyles.meta,
-        ),
+        Text(library.scanning ? Copy.checking : library.location ?? '', style: AppTextStyles.meta),
         const SizedBox(height: AppSpace.xl),
         if (library.packs.isEmpty) Text(Copy.emptyLibrary, style: AppTextStyles.body),
         for (final pack in library.packs)
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpace.md),
-            child: PackCard(pack, rejected: library.wasRejected(pack)),
+            child: GestureDetector(
+              // A4: a pack starts a Listen session with the default options.
+              onTap: pack.available
+                  ? () => startSession(context, defaultOptions([pack.packId]))
+                  : null,
+              child: PackCard(pack, rejected: library.wasRejected(pack)),
+            ),
           ),
       ],
     );
@@ -74,9 +78,8 @@ class PackCard extends StatelessWidget {
               children: [
                 Text(
                   packHeading(input),
-                  style: AppText.german(17).copyWith(
-                    color: available ? AppColors.text : AppColors.neutral600,
-                  ),
+                  style: AppText.german(17)
+                      .copyWith(color: available ? AppColors.text : AppColors.neutral600),
                 ),
                 const SizedBox(height: AppSpace.xs),
                 Text(

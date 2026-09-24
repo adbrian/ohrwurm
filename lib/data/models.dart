@@ -50,17 +50,17 @@ class Pack {
   });
 
   factory Pack.fromRow(Map<String, Object?> row) => Pack(
-        packId: row['pack_id'] as String,
-        level: row['level'] as String,
-        kind: row['kind'] as String,
-        number: row['number'] as int,
-        title: row['title'] as String?,
-        cardCount: row['card_count'] as int,
-        audioFormat: row['audio_format'] as String,
-        available: row['available'] == 1,
-        createdAt: row['created_at'] as String,
-        generatedAt: row['generated_at'] as String,
-      );
+    packId: row['pack_id'] as String,
+    level: row['level'] as String,
+    kind: row['kind'] as String,
+    number: row['number'] as int,
+    title: row['title'] as String?,
+    cardCount: row['card_count'] as int,
+    audioFormat: row['audio_format'] as String,
+    available: row['available'] == 1,
+    createdAt: row['created_at'] as String,
+    generatedAt: row['generated_at'] as String,
+  );
 }
 
 /// A form and kind of example a recipe can require (APP_SPEC 4.7, 9). Each has a `has_*` flag
@@ -103,27 +103,27 @@ class CardRow {
   });
 
   factory CardRow.fromRow(Map<String, Object?> row) => CardRow(
-        cardId: row['card_id'] as String,
-        packId: row['pack_id'] as String,
-        key: row['key'] as String,
-        type: row['type'] as String,
-        addedAt: row['added_at'] as String,
-        examples: {
-          for (final slot in ExampleSlot.values)
-            if (row[slot.column] == 1) slot,
-        },
-        contentJson: row['content_json'] as String,
-      );
+    cardId: row['card_id'] as String,
+    packId: row['pack_id'] as String,
+    key: row['key'] as String,
+    type: row['type'] as String,
+    addedAt: row['added_at'] as String,
+    examples: {
+      for (final slot in ExampleSlot.values)
+        if (row[slot.column] == 1) slot,
+    },
+    contentJson: row['content_json'] as String,
+  );
 
   Map<String, Object?> toRow() => {
-        'card_id': cardId,
-        'pack_id': packId,
-        'key': key,
-        'type': type,
-        'added_at': addedAt,
-        for (final slot in ExampleSlot.values) slot.column: examples.contains(slot) ? 1 : 0,
-        'content_json': contentJson,
-      };
+    'card_id': cardId,
+    'pack_id': packId,
+    'key': key,
+    'type': type,
+    'added_at': addedAt,
+    for (final slot in ExampleSlot.values) slot.column: examples.contains(slot) ? 1 : 0,
+    'content_json': contentJson,
+  };
 }
 
 /// A row of `progress`.
@@ -143,12 +143,12 @@ class Progress {
   });
 
   factory Progress.fromRow(Map<String, Object?> row) => Progress(
-        key: row['key'] as String,
-        timesHeard: row['times_heard'] as int,
-        firstHeardAt: row['first_heard_at'] as String?,
-        lastHeardAt: row['last_heard_at'] as String?,
-        timesRecorded: row['times_recorded'] as int,
-      );
+    key: row['key'] as String,
+    timesHeard: row['times_heard'] as int,
+    firstHeardAt: row['first_heard_at'] as String?,
+    lastHeardAt: row['last_heard_at'] as String?,
+    timesRecorded: row['times_recorded'] as int,
+  );
 }
 
 /// A pack's distinct word keys, and how many of them have been heard at least once (APP_SPEC 7).
@@ -175,7 +175,7 @@ enum SessionMode { listen, mirror }
 
 enum Words { all, noun, verb, other }
 
-enum Focus { base, plural, feminine }
+enum WordFocus { base, plural, feminine }
 
 enum Style { statement, qa }
 
@@ -192,7 +192,7 @@ class SessionOptions {
   /// In selection order.
   final List<String> packIds;
   final Words words;
-  final Focus focus;
+  final WordFocus focus;
   final Style style;
   final QaTranslate qaTranslate;
   final DeckOrder deckOrder;

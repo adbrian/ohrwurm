@@ -9,18 +9,18 @@ const fontFamily = 'Inter';
 /// the languages (DESIGN.md, Type).
 abstract final class AppText {
   static TextStyle german(double size) => TextStyle(
-        fontFamily: fontFamily,
-        fontSize: size,
-        fontWeight: FontWeight.w500,
-        color: AppColors.text,
-      );
+    fontFamily: fontFamily,
+    fontSize: size,
+    fontWeight: FontWeight.w500,
+    color: AppColors.text,
+  );
 
   static TextStyle english(double size) => TextStyle(
-        fontFamily: fontFamily,
-        fontSize: size,
-        fontWeight: FontWeight.w400,
-        color: AppColors.neutral300,
-      );
+    fontFamily: fontFamily,
+    fontSize: size,
+    fontWeight: FontWeight.w400,
+    color: AppColors.neutral300,
+  );
 
   /// For numbers that update in place: position, slider values.
   static const tabular = [FontFeature.tabularFigures()];
@@ -29,16 +29,12 @@ abstract final class AppText {
 /// Buttons are outlined only; the accent is never a fill (DESIGN.md, Shape).
 abstract final class AppButtons {
   static ButtonStyle _outlined(Color border, Color foreground) => OutlinedButton.styleFrom(
-        foregroundColor: foreground,
-        side: BorderSide(color: border, width: AppBorder.interactive),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
-        padding: const EdgeInsets.symmetric(horizontal: AppSpace.xl, vertical: AppSpace.md),
-        textStyle: const TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-        ),
-      );
+    foregroundColor: foreground,
+    side: BorderSide(color: border, width: AppBorder.interactive),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
+    padding: const EdgeInsets.symmetric(horizontal: AppSpace.xl, vertical: AppSpace.md),
+    textStyle: const TextStyle(fontFamily: fontFamily, fontSize: 15, fontWeight: FontWeight.w500),
+  );
 
   /// 2 px accent border, accent text. Use with [OutlinedButton].
   static final primary = _outlined(AppColors.accent, AppColors.accent);

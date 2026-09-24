@@ -54,4 +54,5 @@ Manifest _card(Manifest m, int i) => (m['cards'] as List)[i] as Manifest;
 
 Manifest _grammar(Manifest m, int i) => _card(m, i)['grammar'] as Manifest;
 
-Manifest _example(Manifest m, int card, int i) => (_card(m, card)['examples'] as List)[i] as Manifest;
+Manifest _example(Manifest m, int card, int i) =>
+    (_card(m, card)['examples'] as List)[i] as Manifest;

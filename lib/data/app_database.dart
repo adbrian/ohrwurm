@@ -24,10 +24,10 @@ class AppDatabase {
   final SessionDao session;
 
   AppDatabase._(this.db, Clock clock)
-      : packs = PackDao(db, clock),
-        cards = CardDao(db),
-        progress = ProgressDao(db, clock),
-        session = SessionDao(db, clock);
+    : packs = PackDao(db, clock),
+      cards = CardDao(db),
+      progress = ProgressDao(db, clock),
+      session = SessionDao(db, clock);
 
   /// Opens the database, creating the schema on first launch.
   ///

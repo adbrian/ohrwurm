@@ -23,20 +23,20 @@ String rowDetail(RescanRow row) {
     RescanOutcome.notFound => 'not found',
     RescanOutcome.skipped => 'no manifest · skipped',
   };
-  final kept = row.known &&
-      (row.outcome == RescanOutcome.rejected || row.outcome == RescanOutcome.notFound);
+  final kept =
+      row.known && (row.outcome == RescanOutcome.rejected || row.outcome == RescanOutcome.notFound);
   return [?label, detail, if (kept) 'progress kept'].join(' · ');
 }
 
 String rejectionReason(Rejection why) => switch (why) {
-      ClipsMissing(:final missing) =>
-        missing.length == 1 ? '1 audio file missing' : '${missing.length} audio files missing',
-      ManifestUnreadable() => "manifest couldn't be read",
-      SchemaInvalid() => "manifest doesn't match the pack format",
-      FolderMismatch(:final packId) => "folder name doesn't match the pack ($packId)",
-      UnplayableAudio(:final format) => "audio format $format isn't supported",
-      SaveFailed() => "couldn't be saved on this phone",
-    };
+  ClipsMissing(:final missing) =>
+    missing.length == 1 ? '1 audio file missing' : '${missing.length} audio files missing',
+  ManifestUnreadable() => "manifest couldn't be read",
+  SchemaInvalid() => "manifest doesn't match the pack format",
+  FolderMismatch(:final packId) => "folder name doesn't match the pack ($packId)",
+  UnplayableAudio(:final format) => "audio format $format isn't supported",
+  SaveFailed() => "couldn't be saved on this phone",
+};
 
 /// The row's name: the pack's heading when known, else the folder name.
 String rowName(RescanRow row) => row.pack == null ? row.folderName : packHeading(row.pack!);
@@ -44,7 +44,8 @@ String rowName(RescanRow row) => row.pack == null ? row.folderName : packHeading
 /// The verdict panel's message (DESIGN 2), and whether everything was fine.
 ({bool fine, String message}) verdict(RescanReport report) {
   final rejected = report.count(RescanOutcome.rejected);
-  final ready = report.count(RescanOutcome.added) +
+  final ready =
+      report.count(RescanOutcome.added) +
       report.count(RescanOutcome.updated) +
       report.count(RescanOutcome.unchanged);
   if (rejected > 0) {
@@ -68,7 +69,8 @@ String rowName(RescanRow row) => row.pack == null ? row.folderName : packHeading
 abstract final class Copy {
   // First launch (DESIGN 1).
   static const firstLaunchHeading = "Let's get your ears working.";
-  static const firstLaunchBody = 'You see a word and its sentences and hear each one read aloud. '
+  static const firstLaunchBody =
+      'You see a word and its sentences and hear each one read aloud. '
       'Read along, then swipe to the next. No typing, no network.';
   static const firstLaunchSteps = [
     'Make packs on your computer.',
@@ -86,7 +88,8 @@ abstract final class Copy {
   static const notFound = 'Not found';
   static const notLoaded = 'Not loaded';
   static const checking = 'Checking the folder…';
-  static const emptyLibrary = 'No packs in this folder yet. Copy your pack folders into it, '
+  static const emptyLibrary =
+      'No packs in this folder yet. Copy your pack folders into it, '
       'then rescan.';
 
   // First scan of a newly saved folder.
@@ -94,16 +97,19 @@ abstract final class Copy {
 
   // Stale access (APP_SPEC 5.3).
   static const staleHeading = "Can't reach your pack folder";
-  static const staleKept = 'Nothing has been deleted. Your packs and progress are kept on this '
+  static const staleKept =
+      'Nothing has been deleted. Your packs and progress are kept on this '
       'phone.';
-  static const staleMissing = "The folder may have moved, or the phone's storage may not be "
+  static const staleMissing =
+      "The folder may have moved, or the phone's storage may not be "
       'ready yet. That can happen just after it starts up.';
   static const staleDenied = 'Ohrwurm no longer has permission to read it.';
   static const tryAgain = 'Try again';
 
   // Picked a pack folder instead of the root (APP_SPEC 5.1).
   static const onePackHeading = 'That looks like one pack';
-  static const onePackBody = 'The folder you picked has a manifest in it, so it holds a single '
+  static const onePackBody =
+      'The folder you picked has a manifest in it, so it holds a single '
       'pack. Choose the folder your pack folders are in, usually the one above it.';
   static const back = 'Back';
 }

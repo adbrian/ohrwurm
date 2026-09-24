@@ -49,11 +49,11 @@ class Pauses {
   });
 
   Duration after(LineRole role) => switch (role) {
-        LineRole.word => afterWord,
-        LineRole.translation => afterTranslation,
-        LineRole.germanSentence => afterGermanSentence,
-        LineRole.englishSentence => afterEnglishSentence,
-      };
+    LineRole.word => afterWord,
+    LineRole.translation => afterTranslation,
+    LineRole.germanSentence => afterGermanSentence,
+    LineRole.englishSentence => afterEnglishSentence,
+  };
 }
 
 /// The session's cards as the engine sees them: a length, and each card's recipe and word key.

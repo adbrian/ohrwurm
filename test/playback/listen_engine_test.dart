@@ -25,11 +25,11 @@ class TestDeck implements ListenDeck {
 
   @override
   List<Step> steps(int index) => [
-        Step('c$index/word', LineRole.word),
-        Step('c$index/translation', LineRole.translation),
-        Step('c$index/de', LineRole.germanSentence),
-        Step('c$index/en', LineRole.englishSentence),
-      ];
+    Step('c$index/word', LineRole.word),
+    Step('c$index/translation', LineRole.translation),
+    Step('c$index/de', LineRole.germanSentence),
+    Step('c$index/en', LineRole.englishSentence),
+  ];
 }
 
 const passMs = 8100;

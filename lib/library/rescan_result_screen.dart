@@ -21,8 +21,8 @@ class RescanResultScreen extends StatelessWidget {
     final VoidCallback? action = library.scanning
         ? null
         : v.fine
-            ? library.closeResult
-            : library.rescan;
+        ? library.closeResult
+        : library.rescan;
     // The back arrow and the system back both go to the library (STATUS, 2026-09-24).
     return PopScope(
       canPop: false,
