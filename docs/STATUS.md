@@ -1,5 +1,9 @@
 # Status
 
+**A3–A8 built on branch `claude/gallant-hypatia-1s4nlw` in an autonomous cloud run
+(2026-09-24): not reviewed by Ian, not run on a device** (Autonomous run, below). Return point:
+`a2` at `f08b44d`.
+
 A0, A1 and **A2 complete (2026-09-24, branch `a2`)**. A2 was tested on desktop and on both
 devices, reviewed by Ian, changed as he decided, and re-checked on both devices (A2 re-check,
 below): 11 of 12 pass on both. Re-check 1 fails on the POCO only (the navigation bar turns white
@@ -17,12 +21,72 @@ device, emulator or adb). Claude's own decisions are in Decisions, marked *Claud
 (autonomous run)*, for Ian to confirm or undo. To go back: check out `a2`; to keep some of it,
 cherry-pick the step commits (one or more per step, titled `A3: …` to `A8: …`).
 
+`flutter analyze` clean, `flutter test` **285 passing** (Flutter 3.47.2; 128 at A2). The Android
+build was **not** compiled: the cloud session has no Android SDK, so the new plugins' native side
+(`just_audio`, `audio_session`, `wakelock_plus`, `record`, `permission_handler`,
+`path_provider`) is untested until the first local build.
+
+| Step | Commit | Built | Done-when, as far as a cloud session can show it |
+|---|---|---|---|
+| A3 | `781da57` | `lib/playback/listen_engine.dart` (pure Dart), `ClipPlayer` + `preload`, `test/playback/fake_clip_player.dart`; the 11.6 tests written first | All ten 11.6 scenarios pass, plus 14 more (highlight, pauses, preload, background, clip failure, end card). Deleting any generation check after an `await` fails a test, except the loop-top check, which only runs right after another check |
+| A4 | `30b8f0d` | Card content and grammar line (`lib/cards/`), recipes as data, session cards with clip URIs from one listing per pack, `ListenController`, Listen screen (DESIGN 5–6), `JustAudioClipPlayer` (two players, preloading), `AudioHost` (audio session, calls, keep-screen-on), settings model | Widget tests with the fake player on the fixture packs: highlighting, swipe, Next, replay, *Replaying…*, Loop, end card, background, calls, wakelock, clip failure. **Not played on a device** |
+| A5 | `e0d30a4` | Setup screen (DESIGN 4) replacing the read-only library, resume prompt (DESIGN 3), end card actions, card limit, unheard first, deck builder; **Settings screen** (DESIGN 9) | Deck, resume (dropped cards, most gone), setup and resume widget tests. Force-close resume is covered by the saved position, **not tried on a device** |
+| A6 | `bb9b255` | (Behaviour came with A4–A5.) Tests for the done-when | *der_freund* heard in `a1_k02` counts in `a1_nb01`; `gehen` and `gehen_2` separate; also-in; progress survives rescans |
+| A7 | `022650f` | (Behaviour came with A4–A5.) All 48 words / focus / style / Q&A-translation combinations tested | Checked against an independent reading of the manifests, with a synthetic pack for plural and feminine Q&A (the fixtures have none) |
+| A8 | `0686a5b` | Mirror controller and screen (DESIGN 7), recorder, microphone permission, `RECORD_AUDIO` | Record, stop, play mine, replace, discard on swipe and on leaving, refusal and refusal for good, Q&A boxes, setup routing. **No real microphone** |
+
+**Also changed:** the `Focus` enum is now `WordFocus` (it clashed with Flutter's `Focus`
+widget; stored values unchanged). `dart format` (line length 100) was run over `lib` and `test`,
+which re-wrapped some A2 files: whitespace only. `lib/library/library_screen.dart` is gone; setup
+is the library now. The A4 stop-gap (tap a pack to listen) was replaced by setup in A5.
+
+**Unsure about, for Ian or the device check:**
+- `JustAudioClipPlayer`: that `play()`'s future completes at the clip's end and on `pause()`, as in
+  A0; that `seek(0)` replays a completed source; that preloading into the second player hides the
+  load. Only a device shows it.
+- The swipe feel (threshold 90 px, tilt `dx / 42`°, 180 ms fly-off) and the 1.1 s pulse.
+- Interruptions: calls stop the card and restart it when they end; short sounds are left to
+  Android's automatic ducking (`androidWillPauseWhenDucked: false`).
+- Mirror's recording format (AAC `.m4a`, mono) and the play-and-record session on the POCO.
+- Wording written in DESIGN's voice without Ian's review: `lib/session/copy.dart` (status line on
+  a failed clip, resume and end-card lines, *0 cards* explanations, Mirror microphone messages)
+  and `lib/settings/settings_screen.dart` (pause labels and rationale; the German-sentence one is
+  DESIGN's).
+
 ## Next step
 
-**A2 is done.** The next build step is **A3** (APP_SPEC 15: playback engine + `FakeClipPlayer`,
-tests from 11.6 written first), planned first and started only when Ian asks.
+**Ian reviews the autonomous run** (above) and its decisions (Decisions, *Claude's decision
+(autonomous run)*): keep, change or drop. If it's kept, a **local session** runs the device check
+below; if not, work continues from `a2` at `f08b44d`.
 
-The re-check instructions below were run on 2026-09-24 (local session) and are kept for reference.
+**Device check A3–A8 (local session, POCO and emulator).** Build a debug APK from the head of
+`claude/gallant-hypatia-1s4nlw` and install it over the A2 build (data kept; the folder stays
+`Download/ohrwurm-packs`). The first build is the first time the new plugins compile: if it fails,
+record the error and stop. Record results in a new "A3–A8 device check" section; don't fix
+failures in the local session. Clips are tones (fixtures) or speech (`a1_k01`, POCO).
+
+| # | Do | Should appear |
+|---|---|---|
+| 1 | Launch | Setup (*Your packs*) with the pack cards, each with *0 / N heard* and a thin bar; options below; footer *0 packs · 0 cards*, **Start** disabled |
+| 2 | Select *Freunde, Kollegen und ich* (emulator) or *Guten Tag!* (POCO), then *A1 · Notebook 1* | Accent border and check on each; footer counts packs and cards; **Start** enabled |
+| 3 | Start (Listen, defaults) | The Listen card: headword, translation, grammar line, *also in …* where it applies, one segment per line. **Sound plays**, and the highlight follows it line by line; *Your turn — understand it before the English* in the pause after the German sentence; no gap or stutter between lines (preload) |
+| 4 | Let a card finish (looped) | *Looping — swipe when you're ready*, then the same card again |
+| 5 | Swipe mid-line, in a pause, and in the gap; then five fast swipes | Audio stops at once; exactly one card per swipe; five swipes move five cards, nothing left playing |
+| 6 | Tap the card; **Again**; **Next** | Tap and Again restart at the headword with *Replaying…*; Next moves on |
+| 7 | Loop pill off; let a card finish | *Moving on…*, then the next card |
+| 8 | Home button, wait, return | Sound stops at once; on return the card restarts from its headword |
+| 9 | Screen timeout short (e.g. 30 s), leave a card looping | The screen stays on while the session is open |
+| 10 | Force-stop mid-session, relaunch | *PICK UP WHERE YOU LEFT OFF* with the packs, options and *N of M*; **Resume** lands on the same card |
+| 11 | Swipe past the last card (use a card limit of 10 to get there) | The end card: **Restart**, **Reshuffle**, **Change selection** all work |
+| 12 | Back to setup | The packs heard show *N / M heard*; a word heard in one pack counts in the other (`der_freund`) |
+| 13 | Settings (gear): change speed to 0.75× and the German-sentence pause to 3 s; start a session | Clips slower, pauses unchanged except the German-sentence one |
+| 14 | Mirror, statements: **Play**, **Record** (first time: the permission dialog; allow), speak, **Stop**, **Play mine** | The German clip plays; *Stop · 0:0N* counts while recording and the box border is accent; your recording plays back |
+| 15 | Mirror: deny the microphone once (clear the app's permission first) | Record explains why it can't work; after *Don't ask again*, it says how to allow it, and *Open settings* opens the app's settings |
+| 16 | Mirror: swipe after recording | Next card; *Play mine* gone |
+| 17 | During a Listen session, have someone call (or play a notification sound) | A call stops the card, which restarts when the call ends; a notification only ducks |
+
+The A2 re-check instructions below were run on 2026-09-24 (local session) and are kept for
+reference.
 
 Build a debug APK from the head of `a2` and install it **over** the current A2 build on the POCO and
 the emulator (keep the data: the saved folder and the database stay). The folder stays
@@ -227,6 +291,11 @@ before Ian's review changes.
   navigation bar at the first frame, accepted as is (A2 re-check; Pending). Reported done
   2026-09-24.
 
+## Built, not yet reviewed or device-checked
+
+- **A3–A8** — branch `claude/gallant-hypatia-1s4nlw`, autonomous cloud run (above). Tests pass;
+  no device run; no Android build.
+
 ## Decisions
 
 Every decision Ian makes is recorded here: date, what, why. Where the reason wasn't given, it says
@@ -280,16 +349,32 @@ so. APP_SPEC and DESIGN remain the source of truth for behaviour; this is the lo
 | 2026-09-24 | **A2 wording approved as proposed** (`lib/library/copy.dart`, listed in DESIGN 2 and 4 and in the device re-check), plus *Not loaded* | Ian gave no reason |
 | 2026-09-24 | Don't commit `a1_k01`'s audio. **Commit its manifest** as `test/fixtures/real/a1_k01_manifest.json`, marked as a pipeline snapshot, with a validator test that it passes | Cross-repo check that the app's and pipeline's schema copies still agree; the audio is 21 MB |
 | 2026-09-24 | **Accept the POCO's white navigation bar at the first frame as is** (A2 re-check 1): no fix now; kept under Pending as a known issue so it can be fixed later. **A2 reported done** | Ian gave no reason. Claude had recommended fixing it (every cold start on Android 10, the minimum version; a small, contained change) |
+| 2026-09-24 | Build A3–A8 without stopping for approval, on a new branch; note the return point | Ian's instruction |
+| 2026-09-24 | **Preload: `ClipPlayer.preload(uri)`**, a synchronous hint the engine never awaits, given the next clip as each clip starts (the next card's first clip before the gap; the same card's in looped mode). `JustAudioClipPlayer` loads it into a second player (APP_SPEC 11.1) | Claude's decision (autonomous run): adds no `await` to the engine and leaves `play`/`stop` as they are |
+| 2026-09-24 | **A clip that fails to play stops the card there**: not heard, no advance; the status line says the line couldn't be played and to rescan or swipe (APP_SPEC 17's open decision) | Claude's decision (autonomous run): like a rejected pack, never half-played silently; the user stays in control |
+| 2026-09-24 | **Looped mode also waits the between-cards pause before repeating** (APP_SPEC 11.2's pseudocode has no gap when looped) | Claude's decision (autonomous run): DESIGN 5 shows *Looping — swipe when you're ready* "in the gap, looped mode" |
+| 2026-09-24 | **Focus doesn't apply in Mirror** (hidden in setup; Mirror always shows base examples) | Claude's decision (autonomous run): APP_SPEC 12's boxes are base examples only, so a focus would filter without changing anything shown |
+| 2026-09-24 | **Reshuffle** shuffles the session's own cards again; options unchanged | Claude's decision (autonomous run): APP_SPEC 10.3 "new order, same options" |
+| 2026-09-24 | **Resume drops gone cards from the saved order** when fewer than half are gone, keeping the position on the same card; cards in unavailable packs count as gone | Claude's decision (autonomous run): APP_SPEC 10.2; their clips can't play |
+| 2026-09-24 | The resume prompt shows once per launch, when the library is ready: after the launch rescan's result screen if that shows first | Claude's decision (autonomous run) |
+| 2026-09-24 | **Settings built** (APP_SPEC 14, DESIGN 9), reached from a gear in setup; pauses 0–5 s in 0.1 s steps | Claude's decision (autonomous run): the engine needs the pause settings; Settings had no build step |
+| 2026-09-24 | Setup is the library: pack cards select, and carry progress; setup starts with the saved session's selection and options | Claude's decision (autonomous run): DESIGN 4 calls setup the main entry point |
+| 2026-09-24 | Card limit: *No limit*, then 10 to 200 in steps of 10 | Claude's decision (autonomous run): APP_SPEC 10.1 says only "none / a number" |
+| 2026-09-24 | *Also in* uses short names, *K2 · NB1*; a pack of another level adds it: *A2 K2* | Claude's decision (autonomous run): APP_SPEC 8's example, without ambiguity across levels |
+| 2026-09-24 | Header pack names joined with *+* | Claude's decision (autonomous run): titles can contain commas and labels contain *·* |
+| 2026-09-24 | Mirror's *Play mine* plays at 1×; the speed setting applies to the pack's clips | Claude's decision (autonomous run) |
+| 2026-09-24 | Mirror recordings are AAC `.m4a`, mono, in the app's temporary folder | Claude's decision (autonomous run) |
+| 2026-09-24 | `Focus` enum renamed `WordFocus` | Claude's decision (autonomous run): name clash with Flutter's `Focus` widget |
 
 ## Pending
 
-- **Clip fails to load mid-session** — behaviour undecided (APP_SPEC 17). Needed by A4.
-- **Settings has no build step** (APP_SPEC 14, DESIGN 9: pauses, speed, keep screen on, *Change
-  folder*, Rescan). A2 offers *Change folder* only on the stale-access screen. Which step builds
-  Settings is Ian's call.
+- **Ian's review of the autonomous run A3–A8**, and the device check (Next step).
+- **Clip fails to load mid-session** — decided provisionally by Claude in the autonomous run
+  (Decisions; APP_SPEC 17); Ian to confirm.
 - **Rescan cost per chapter** — decide after the phase timings in the A2 re-check (row 12) whether
   unchanged packs should skip schema checking.
-- **Preload mechanism** — designed in A3's plan.
+- **Preload mechanism** — designed in the autonomous run (Decisions); its effect is only visible on
+  a device (device check 3).
 - **Known issue, accepted for now: white navigation bar at the first frame on the POCO**
   (Android 10, MIUI; A2 re-check 1, `docs/screenshots/a2-recheck/poco/01b-white-nav-bar-at-first-frame.png`).
   The launch window is dark, but the system navigation bar turns white for ≈0.3–0.45 s as Flutter

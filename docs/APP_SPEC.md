@@ -577,7 +577,7 @@ Once the pipeline produces real packs, test against those as well.
 | Question | Position |
 |---|---|
 | Storage approach | **Decided in A0:** (a) read in place, `saf_util` + `saf_stream` (5.1) |
-| Clip fails to load mid-session (e.g. files removed from the folder after a scan) | **Undecided.** Skip the line, stop the card, or show an error — needed by A4 |
+| Clip fails to load mid-session (e.g. files removed from the folder after a scan) | **Provisional (Claude, autonomous run, 2026-09-24; Ian to confirm):** the card stops at that line, isn't counted as heard and doesn't advance; the status line says so and suggests a rescan or a swipe (STATUS, Decisions) |
 | Colour-coding by article | On hold |
 | Displaying Mirror recording counts | Undecided |
 | iOS | Later. Opus may need `.caf` on iOS; `audio_format` already allows for it |
