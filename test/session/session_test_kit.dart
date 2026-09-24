@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:ohrwurm/data/app_database.dart';
 import 'package:ohrwurm/library/library_controller.dart';
+import 'package:ohrwurm/mirror/recorder.dart';
 import 'package:ohrwurm/packs/manifest.dart';
 import 'package:ohrwurm/packs/rescanner.dart';
 import 'package:ohrwurm/playback/audio_host.dart';
@@ -39,6 +40,55 @@ class FakeAudioHost implements AudioHost {
   Future<void> keepScreenOn(bool on) async => screenOn = on;
 }
 
+/// A [Recorder] that makes fake file paths and records what happened to them.
+class FakeRecorder implements Recorder {
+  int _next = 0;
+  bool recording = false;
+  final started = <String>[];
+  final deleted = <String>[];
+  int cancels = 0;
+
+  @override
+  Future<void> start() async {
+    recording = true;
+    started.add('/tmp/mirror_${_next++}.m4a');
+  }
+
+  @override
+  Future<String?> stop() async {
+    if (!recording) return null;
+    recording = false;
+    return started.last;
+  }
+
+  @override
+  Future<void> cancel() async {
+    cancels++;
+    recording = false;
+  }
+
+  @override
+  Future<void> delete(String path) async => deleted.add(path);
+
+  @override
+  Future<void> dispose() async {}
+}
+
+class FakeMic implements MicPermission {
+  MicAccess answer = MicAccess.granted;
+  int requests = 0;
+  int settingsOpened = 0;
+
+  @override
+  Future<MicAccess> request() async {
+    requests++;
+    return answer;
+  }
+
+  @override
+  Future<void> openSettings() async => settingsOpened++;
+}
+
 class MemorySettingsStore implements SettingsStore {
   final values = <String, Object>{};
 
@@ -59,6 +109,8 @@ class SessionKit {
   final Sessions sessions;
   final AppSettings settings = AppSettings(MemorySettingsStore());
   final host = FakeAudioHost();
+  final recorder = FakeRecorder();
+  final mic = FakeMic();
   late final SetupController setup = SetupController(
     library: library,
     deck: DeckBuilder(cards: db.cards, progress: db.progress),
@@ -122,6 +174,8 @@ class SessionKit {
           return p;
         },
       ),
+      Provider<RecorderFactory>.value(value: () => recorder),
+      Provider<MicPermission>.value(value: mic),
       Provider<PlayerDisposer>.value(value: (ClipPlayer p) async => disposedPlayers++),
     ],
     child: MaterialApp(theme: buildAppTheme(), home: child),

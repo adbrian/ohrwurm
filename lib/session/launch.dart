@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import '../data/app_database.dart';
 import '../data/models.dart';
 import '../library/library_controller.dart';
+import '../mirror/mirror_controller.dart';
+import '../mirror/mirror_screen.dart';
+import '../mirror/recorder.dart';
 import '../playback/clip_player.dart';
 import '../settings/settings.dart';
 import 'listen_controller.dart';
@@ -31,8 +34,11 @@ SessionOptions defaultOptions(List<String> packIds) => SessionOptions(
   unheardFirst: false,
 );
 
-/// Opens [opened] on its session screen and waits until the screen closes. Returns true when the
-/// user asked to change the selection from the end card.
+/// Makes the recorder for a Mirror screen. Tests pass a fake.
+typedef RecorderFactory = Recorder Function();
+
+/// Opens [opened] on its session screen — Listen or Mirror — and waits until the screen closes.
+/// Returns true when the user asked to change the selection from the end card.
 Future<bool> showSession(BuildContext context, OpenedSession opened) async {
   final db = context.read<AppDatabase>();
   final settings = context.read<AppSettings>();
@@ -42,53 +48,79 @@ Future<bool> showSession(BuildContext context, OpenedSession opened) async {
   final packs = {for (final p in context.read<LibraryController>().packs) p.packId: p};
   final names = packNames(opened.session.options.packIds, packs);
   final navigator = Navigator.of(context);
+  final mirror = opened.session.options.mode == SessionMode.mirror;
+  final makeRecorder = mirror ? context.read<RecorderFactory>() : null;
+  final mic = mirror ? context.read<MicPermission>() : null;
 
-  final player = makePlayer(settings.speed);
+  final players = [
+    makePlayer(settings.speed),
+    // Mirror plays the user's own recordings at 1×.
+    if (mirror) makePlayer(1),
+  ];
+  final recorder = makeRecorder?.call();
   var changeSelection = false;
   try {
     await navigator.push(
       MaterialPageRoute<void>(
-        builder: (routeContext) => _OwnedListenScreen(
-          create: () => ListenController(
-            opened: opened,
-            sessions: sessions,
-            progress: db.progress,
-            cardDao: db.cards,
-            player: player,
-            pauses: settings.pauses,
-          ),
-          packs: names,
-          onChangeSelection: () {
+        builder: (routeContext) {
+          void onChangeSelection() {
             changeSelection = true;
             Navigator.of(routeContext).pop();
-          },
-        ),
+          }
+
+          if (mirror) {
+            return _Owned<MirrorController>(
+              create: () => MirrorController(
+                opened: opened,
+                sessions: sessions,
+                progress: db.progress,
+                cardDao: db.cards,
+                player: players[0],
+                minePlayer: players[1],
+                recorder: recorder!,
+                mic: mic!,
+              ),
+              builder: (c) =>
+                  MirrorScreen(controller: c, packs: names, onChangeSelection: onChangeSelection),
+            );
+          }
+          return _Owned<ListenController>(
+            create: () => ListenController(
+              opened: opened,
+              sessions: sessions,
+              progress: db.progress,
+              cardDao: db.cards,
+              player: players[0],
+              pauses: settings.pauses,
+            ),
+            builder: (c) =>
+                ListenScreen(controller: c, packs: names, onChangeSelection: onChangeSelection),
+          );
+        },
       ),
     );
   } finally {
-    await disposePlayer(player);
+    for (final player in players) {
+      await disposePlayer(player);
+    }
+    await recorder?.dispose();
   }
   return changeSelection;
 }
 
 /// Creates its controller when shown and disposes it when closed.
-class _OwnedListenScreen extends StatefulWidget {
-  final ListenController Function() create;
-  final String packs;
-  final VoidCallback onChangeSelection;
+class _Owned<C extends ChangeNotifier> extends StatefulWidget {
+  final C Function() create;
+  final Widget Function(C controller) builder;
 
-  const _OwnedListenScreen({
-    required this.create,
-    required this.packs,
-    required this.onChangeSelection,
-  });
+  const _Owned({super.key, required this.create, required this.builder});
 
   @override
-  State<_OwnedListenScreen> createState() => _OwnedListenScreenState();
+  State<_Owned<C>> createState() => _OwnedState<C>();
 }
 
-class _OwnedListenScreenState extends State<_OwnedListenScreen> {
-  late final ListenController _controller = widget.create();
+class _OwnedState<C extends ChangeNotifier> extends State<_Owned<C>> {
+  late final C _controller = widget.create();
 
   @override
   void dispose() {
@@ -97,11 +129,7 @@ class _OwnedListenScreenState extends State<_OwnedListenScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => ListenScreen(
-    controller: _controller,
-    packs: widget.packs,
-    onChangeSelection: widget.onChangeSelection,
-  );
+  Widget build(BuildContext context) => widget.builder(_controller);
 }
 
 /// Creates a session with [options] (replacing the saved one) and shows it.

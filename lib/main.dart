@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'data/app_database.dart';
 import 'library/home.dart';
 import 'library/library_controller.dart';
+import 'mirror/recorder.dart';
 import 'packs/rescanner.dart';
 import 'packs/saf_pack_storage.dart';
 import 'playback/audio_host.dart';
@@ -61,6 +62,8 @@ Future<void> main() async {
         ChangeNotifierProvider<SetupController>.value(value: setup),
         Provider<AudioHost>.value(value: PlatformAudioHost()),
         Provider<PlayerFactory>.value(value: (speed) => JustAudioClipPlayer()..speed = speed),
+        Provider<RecorderFactory>.value(value: PlatformRecorder.new),
+        Provider<MicPermission>.value(value: PlatformMicPermission()),
         Provider<PlayerDisposer>.value(
           value: (player) async {
             if (player is JustAudioClipPlayer) await player.dispose();

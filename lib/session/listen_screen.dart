@@ -252,7 +252,14 @@ class LineSegments extends StatelessWidget {
 }
 
 /// How a line looks: playing now, already played, or not yet (DESIGN 5).
-enum LineState { active, played, upcoming }
+enum LineState {
+  active,
+  played,
+  upcoming,
+
+  /// Mirror's German line when nothing plays: full colour, no mark.
+  rest,
+}
 
 LineState lineState(int index, int? active, ListenPhase phase) {
   if (phase == ListenPhase.gap) return LineState.played;
@@ -374,7 +381,7 @@ class HighlightLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final active = state == LineState.active;
     final color = switch (state) {
-      LineState.active => AppColors.text,
+      LineState.active || LineState.rest => AppColors.text,
       LineState.played => AppColors.neutral400,
       LineState.upcoming => AppColors.neutral500,
     };

@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Mirror mode records the user repeating a sentence, asked for on the first Record
+         (APP_SPEC 12). Recordings stay in the app's temporary folder. No network permission. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
         android:label="ohrwurm"
         android:name="${applicationName}"

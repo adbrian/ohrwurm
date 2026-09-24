@@ -92,7 +92,15 @@ class _Options extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // MODE_ROW
+        OptionRow(
+          label: SessionCopy.mode,
+          child: Segmented<SessionMode>(
+            values: SessionMode.values,
+            selected: o.mode,
+            label: SessionCopy.modeOption,
+            onChanged: setup.setMode,
+          ),
+        ),
         OptionRow(
           label: SessionCopy.words,
           child: Segmented<Words>(
