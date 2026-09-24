@@ -1,0 +1,33 @@
+name: ohrwurm
+description: "Offline app for learning German vocabulary by listening."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  path: ^1.9.0
+  provider: ^6.1.5
+  sqflite: ^2.4.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  sqflite_common_ffi: ^2.4.2
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    # Inter 4.1 (rsms/inter), SIL Open Font License 1.1: assets/fonts/OFL.txt
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500

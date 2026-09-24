@@ -300,7 +300,9 @@ CREATE TABLE session (
 For a card, other **available** packs containing the same key:
 
 ```sql
-SELECT pack_id FROM cards WHERE key = ? AND pack_id != ?
+SELECT DISTINCT c.pack_id
+FROM cards c JOIN packs p ON p.pack_id = c.pack_id
+WHERE c.key = ? AND c.pack_id != ? AND p.available = 1
 ```
 
 Shown as a small tag: *also in K2 · NB1*. Computed at display time, never stored.
