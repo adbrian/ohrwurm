@@ -1,11 +1,12 @@
 # Status
 
-A0 and A1 complete. **A1 passed on the POCO F1 (2026-09-24).** Next: plan A2.
+A0 and A1 complete. **A2 plan approved (2026-09-24); building not started** — Ian asked to wait.
 
 ## Next step
 
-**Plan A2** (APP_SPEC 15): schema validation, rescan and reconcile, pack list screen. Test with the
-fixture packs **and** the real pipeline pack `a1_k01`. Wait for approval before writing code.
+**Build A2** when Ian resumes and says to start (APP_SPEC 15): schema validation, rescan and
+reconcile, pack list screen, per the approved plan and the 2026-09-24 A2 decisions below. Test with
+the fixture packs **and** the real pipeline pack `a1_k01`. Propose the new wording for Ian's review.
 
 ## Done
 
@@ -45,11 +46,19 @@ so. APP_SPEC and DESIGN remain the source of truth for behaviour; this is the lo
 | 2026-09-24 | Commit A1 on `main` | A1 passed on the POCO |
 | 2026-09-24 | Record every decision here with date, what and why | So a new session doesn't have to ask |
 | 2026-09-24 | Test A2 with the real pipeline pack `a1_k01` (Kapitel 1, *Guten Tag!*) as well as the fixtures | It's now on the POCO in `Download/ohrwurm-packs/` |
+| 2026-09-24 | A2 plan approved; don't start building until Ian resumes | Ian taking a break |
+| 2026-09-24 | Schema validator: **`json_schema` 5.2.2**, `format` not asserted (APP_SPEC 4.1) | Agreed with Python `jsonschema` on all 29 test cases; works offline. `json_schema_builder` fetches the meta-schema over the network. Unchecked `format` is the 2020-12 default and matches `tool/make_fixture_pack.py`; `json_schema`'s date-time check accepts a missing timezone |
+| 2026-09-24 | A2 "pack list screen" = **read-only library**: pack cards per DESIGN 4 (heading, meta line, word count; unavailable dimmed with *Not found*), sorted, with a **Rescan** action. No selection, progress or options yet | Claude's proposal, accepted: selection, progress and options belong to A5–A6 |
+| 2026-09-24 | A known pack that **fails validation** on rescan becomes **unavailable**; its rows and progress are kept; the reason shows on the result screen | Claude's proposal, accepted: with read-in-place its clips may really be gone; the spec only covered "no longer found" |
+| 2026-09-24 | Result screen (DESIGN 2) only when something changed (added, updated, rejected, went missing); **always** after a manual Rescan | Claude's proposal, accepted; Ian's reason not stated |
+| 2026-09-24 | **Rescan never blocks the library**: show the library from the database immediately, rescan in the background, update when done | Ian's addition; reason not stated |
+| 2026-09-24 | Wording not in DESIGN (stale access, *Try again*, "looks like one pack", rejection reasons): Claude proposes it in DESIGN's voice, **describing failures by what was protected**; Ian reviews | Reason not stated; DESIGN's Copy section already asks for failures described by what was protected |
+| 2026-09-24 | Don't commit `a1_k01`'s audio. **Commit its manifest** as `test/fixtures/real/a1_k01_manifest.json`, marked as a pipeline snapshot, with a validator test that it passes | Cross-repo check that the app's and pipeline's schema copies still agree; the audio is 21 MB |
 
 ## Pending
 
 - **Clip fails to load mid-session** — behaviour undecided (APP_SPEC 17). Needed by A4.
-- **JSON Schema validator** — chosen in A2's plan (APP_SPEC 4.1).
+- **A2 wording** — to be proposed during A2 and reviewed by Ian.
 - **Preload mechanism** — designed in A3's plan.
 - Open since the start: displaying Mirror recording counts; colour-coding by article (on hold); iOS
   (later).
