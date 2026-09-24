@@ -6,6 +6,17 @@ below): 11 of 12 pass on both. Re-check 1 fails on the POCO only (the navigation
 for about half a second at the first frame); **Ian accepted it as is** (Decisions; kept under
 Pending as a known issue with the likely fix).
 
+## Autonomous run A3–A8 (branch `claude/gallant-hypatia-1s4nlw`)
+
+**Return point: branch `a2` at `f08b44d`** — A2 done, nothing after it. Everything past that
+commit is on `claude/gallant-hypatia-1s4nlw`, built by a cloud session on 2026-09-24 at Ian's
+request: *go through all the phases, don't wait for confirmation, make changes as you see fit,
+on a new branch*. So, unlike every step before it, **no step on this branch was planned with Ian
+or approved before it was built**, and nothing was run on a device (a cloud session has no
+device, emulator or adb). Claude's own decisions are in Decisions, marked *Claude's decision
+(autonomous run)*, for Ian to confirm or undo. To go back: check out `a2`; to keep some of it,
+cherry-pick the step commits (one or more per step, titled `A3: …` to `A8: …`).
+
 ## Next step
 
 **A2 is done.** The next build step is **A3** (APP_SPEC 15: playback engine + `FakeClipPlayer`,
