@@ -2,12 +2,18 @@
 
 A0 and A1 complete. **A2 built and tested on desktop, and on both devices (2026-09-24)**: every
 device check passed on the POCO and the emulator (branch `a2`). Ian reviewed the device findings
-and open points the same day; a cloud session made the changes he decided (Decisions, below). Not
-yet reported done: the changes need the local device re-check under Next step first.
+and open points the same day; a cloud session made the changes he decided (Decisions, below). **The
+device re-check ran the same day (A2 re-check, below): 11 of 12 pass on both devices; re-check 1
+fails on the POCO only** (a white navigation bar for about half a second at the first frame). Not
+yet reported done.
 
 ## Next step
 
-**A local session re-checks A2 on the devices**, then A2 is reported done. Don't start A3.
+**Ian decides what to do about re-check 1 on the POCO** (A2 re-check, below): the launch window is
+dark, but the system navigation bar turns white for about 0.3–0.45 s as Flutter draws its first
+frame. Everything else in the re-check passed. Then A2 is reported done. Don't start A3.
+
+The re-check instructions below were run on 2026-09-24 (local session) and are kept for reference.
 
 Build a debug APK from the head of `a2` and install it **over** the current A2 build on the POCO and
 the emulator (keep the data: the saved folder and the database stay). The folder stays
@@ -31,6 +37,62 @@ fix failures in the local session. Fixture files to put back are in `test/fixtur
 
 Everything else in A2 is unchanged and needs no re-check. The emulator has no `a1_k01`, so it skips
 that row in 3.
+
+## A2 re-check (2026-09-24)
+
+Local session. Debug APK from `ab1ce08`, installed **over** the previous A2 build with data kept on
+the POCO F1 (Android 10) and the `ohrwurm_api34` emulator (Android 14); the folder stayed
+`Download/ohrwurm-packs`. Ian tapped; Claude used adb for screenshots, screen recordings (analysed
+frame by frame at 30 fps), logcat, and removing and restoring clips (restored byte-identical from
+`test/fixtures/packs/`). No code was changed; analyze and test were not run. The emulator shut
+down during a pause and was restarted before its re-checks; its app data was unaffected.
+
+| # | Re-check | POCO F1 (Android 10) | Emulator (Android 14) |
+|---|---|---|---|
+| 1 | Launch window | **Fail (partly).** Dark (`#0E0E13`) from the tap in both launches, no white window. But the **system navigation bar turns white** for ≈0.3 s (first launch) and ≈0.45 s (second) as Flutter draws its first frame, then dark again. `poco/01b-white-nav-bar-at-first-frame.png` | Pass. Dark from the first frame; Android 14's splash shows the app icon on dark; the navigation bar stays dark |
+| 2 | First launch after the install | Pass: the result screen once | Pass |
+| 3 | Result rows | Pass: all six rows exactly as specified, incl. *Guten Tag!* / *A1 · Chapter 1 · unchanged* | Pass (no `a1_k01`) |
+| 4 | Icons | Pass: back arrow, folder and rescan are thin Phosphor strokes, no boxes | Pass |
+| 5 | System back on the result screen | Pass: the library; the app stays open | Pass. Ian's first attempts from the emulator window didn't go back (cause unknown; the log was cleared before it could be read); a back key via adb worked, and Ian's retest in 7 worked through Android 14's predictive-back callback |
+| 6 | Rejection not repeated | Pass: the library stays after the relaunch rescan | Pass |
+| 7 | Rescan still shows it | Pass: result screen with the `a1_k03` row | Pass |
+| 8 | New reason is news | Pass: *2 audio files missing*; after restoring, shown once more with *1 audio file missing* | Pass |
+| 9 | *Not loaded* tag | Pass: *not loaded · 1 audio file missing · progress kept*, ringed disc, *2 packs weren't loaded. Nothing else changed.*; library card dimmed, **Not loaded** | Pass |
+| 10 | Tag remembered | Pass: *Not loaded* in the first library frame (recorded), through *Checking the folder…*; library stays. Clip restored: available, no tag (logged *unchanged*, no result screen) | Pass |
+| 11 | Headphone icon (emulator only) | — | Pass: Phosphor stroke in the accent-outlined tile. After *Choose folder* (Android 14 asked for access again): everything *added*, *One pack wasn't loaded. The rest are ready.* |
+| 12 | Phase timings | Recorded below | Recorded below |
+
+**Row 12 — rescan phases** (debug build, ms; logged as
+`ohrwurm.rescan <folder> <total> (list, read, check[, save])`):
+
+| Device | Run | Pack | Total | List | Read | Check | Save |
+|---|---|---|---|---|---|---|---|
+| POCO | First launch after install | `a1_k01` | 930 | 396 | 20 | 512 | — |
+| POCO | First launch after install | `b2_k99` | 389 | 203 | 15 | 170 | — |
+| POCO | Relaunch | `a1_k01` | 764 | 332 | 16 | 414 | — |
+| POCO | Relaunch | `b2_k99` | 314 | 162 | 8 | 142 | — |
+| POCO | Rescan (button) | `a1_k01` | 549 | 305 | 18 | 224 | — |
+| POCO | Rescan (button) | `b2_k99` | 256 | 141 | 7 | 108 | — |
+| Emulator | First launch after install | `b2_k99` | 915 | 741 | 11 | 163 | — |
+| Emulator | Relaunch | `b2_k99` | 918 | 714 | 9 | 195 | — |
+| Emulator | Rescan (button) | `b2_k99` | 966 | 879 | 9 | 76 | — |
+| Emulator | After clearing storage (added) | `b2_k99` | 948 | 712 | 11 | 167 | 55 |
+
+Rescan totals: POCO 2,651 (first launch) / 2,189 (relaunch) / 1,035 ms (Rescan button); emulator
+3,040 / 2,517 / 1,281 ms; after clearing storage 3,575 ms. Listing the folder is the largest share
+of `b2_k99` on both devices (≈75–90% on the emulator, ≈50–55% on the POCO). For `a1_k01` on the
+POCO, list and check are close: check was larger at launch, list on the Rescan button. The first
+*added* pack after a storage clear (`a1_k02`) spent 1,624 ms in `save` — the first write to a fresh
+database.
+
+**Also noted, not part of a re-check:**
+- On the emulator the splash shows **Flutter's default app icon**: the app has no icon of its own
+  yet.
+- On the POCO, after the dark launch window, the debug build shows an empty dark screen for
+  ≈3.4 s before the library (≈5 s on the emulator). Debug builds start slowly; not measured in
+  release.
+
+Screenshots: `docs/screenshots/a2-recheck/poco/` and `docs/screenshots/a2-recheck/emulator/`.
 
 ## A2 device results (2026-09-24)
 
